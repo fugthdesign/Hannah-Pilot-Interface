@@ -633,6 +633,34 @@
             0%, 100% { opacity: 0.3; transform: translateY(0); }
             50% { opacity: 1; transform: translateY(-8px); }
         }
+
+        .thinking-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: var(--bg-hover);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .thinking-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: thinkBounce 1.4s infinite;
+        }
+
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinkBounce {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
     </style>
 </head>
 <body>
@@ -707,6 +735,16 @@
     </div>
 
     <div class="input-zone">
+        <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-sidebar); border-radius: 16px; border: 1px solid var(--border);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">lightbulb</span>
+                <input type="checkbox" id="deepThinkToggleSend" style="width: 16px; height: 16px; cursor: pointer;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-sidebar); border-radius: 16px; border: 1px solid var(--border);">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">language</span>
+                <input type="checkbox" id="internetToggleSend" style="width: 16px; height: 16px; cursor: pointer;">
+            </div>
+        </div>
         <div class="input-box">
             <button class="input-btn" id="attachBtn" title="Attach file">
                 <span class="material-symbols-outlined">add_circle</span>
@@ -754,19 +792,50 @@
         </div>
 
         <div class="modal-section">
-            <div class="section-title">API Configuration</div>
-            <div style="background: var(--bg-body); padding: 12px; border-radius: 10px; font-size: 12px; color: var(--text-dim); font-family: 'Courier New', monospace; word-break: break-all;">
-                API Base: <span id="apiBaseDisplay">Loading...</span>
+            <div class="section-title">Response Quality</div>
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 13px; color: var(--text);">Creativity</span>
+                    <span style="font-size: 12px; color: var(--accent); font-weight: 500;" id="tempDisplay">0.7</span>
+                </div>
+                <input type="range" id="tempSlider" min="0" max="2" step="0.1" value="0.7" style="width: 100%; cursor: pointer;">
+                <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px; display: flex; justify-content: space-between;">
+                    <span>Focused</span>
+                    <span>Creative</span>
+                </div>
             </div>
         </div>
 
         <div class="modal-section">
-            <div class="section-title">About</div>
-            <table class="specs-table">
-                <tr><td>Version</td><td class="specs-value">1.0</td></tr>
-                <tr><td>Backend</td><td class="specs-value">Hugging Face</td></tr>
-                <tr><td>Model</td><td class="specs-value">Qwen (0.5B)</td></tr>
-            </table>
+            <div class="section-title">Advanced Features</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                <span style="font-size: 13px; color: var(--text);">Deep Think Mode</span>
+                <input type="checkbox" id="deepThinkToggle" style="width: 18px; height: 18px; cursor: pointer;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                <span style="font-size: 13px; color: var(--text);">Internet Search</span>
+                <input type="checkbox" id="internetToggle" style="width: 18px; height: 18px; cursor: pointer;">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
+                <span style="font-size: 13px; color: var(--text);">Memory Cache</span>
+                <input type="checkbox" id="memoryCacheToggle" checked style="width: 18px; height: 18px; cursor: pointer;">
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <div class="section-title">Data & Privacy</div>
+            <button onclick="exportChat()" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--accent); cursor: pointer; font-size: 13px; margin-bottom: 8px; transition: all 0.2s ease;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle; margin-right: 6px;">download</span>
+                Export Chat
+            </button>
+            <button onclick="clearAllChats()" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--danger); border-radius: 10px; color: var(--danger); cursor: pointer; font-size: 13px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(242, 139, 130, 0.1)'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle; margin-right: 6px;">delete_outline</span>
+                Clear All Chats
+            </button>
+            <button onclick="clearCache()" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--warning); border-radius: 10px; color: var(--warning); cursor: pointer; font-size: 13px; margin-top: 8px; transition: all 0.2s ease;" onmouseover="this.style.background='rgba(252, 201, 52, 0.1)'" onmouseout="this.style.background='transparent'">
+                <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle; margin-right: 6px;">cleaning_services</span>
+                Clear Cache
+            </button>
         </div>
     </div>
 </div>
@@ -805,6 +874,11 @@
     const conversation = [];
     let userName = 'User';
     let currentChatId = null;
+    let temperature = 0.7;
+    let deepThink = false;
+    let internetMode = false;
+    let memoryCache = true;
+    const responseCache = {}; // Cache for quick responses
     const chats = {}; // { chatId: { title, messages, timestamp } }
 
     // ================================
@@ -815,7 +889,7 @@
         loadChats();
         loadSystem();
         setupEventListeners();
-        document.getElementById('apiBaseDisplay').textContent = API_BASE;
+        loadSettings();
     }
 
     function initAvatar() {
@@ -948,25 +1022,38 @@
         div.innerHTML = `
             <div class="message-avatar"><span class="material-symbols-outlined">neurology</span></div>
             <div class="message-content">
-                <div class="content">${renderTextToHtml(text)}</div>
+                <div class="content"></div>
                 <div class="message-actions"></div>
             </div>
         `;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        if (save) {
-            conversation.push({ role: 'assistant', content: text });
-            if (chats[currentChatId]) {
-                chats[currentChatId].messages.push({ role: 'assistant', content: text });
-                chats[currentChatId].timestamp = Date.now();
-                saveChats();
-                renderChatHistory();
+        const contentDiv = div.querySelector('.content');
+        
+        // Typing effect
+        let index = 0;
+        const typeEffect = () => {
+            if (index < text.length) {
+                contentDiv.innerHTML = renderTextToHtml(text.slice(0, index + 1));
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                index++;
+                setTimeout(typeEffect, 20); // 20ms per character
+            } else {
+                if (save) {
+                    conversation.push({ role: 'assistant', content: text });
+                    if (chats[currentChatId]) {
+                        chats[currentChatId].messages.push({ role: 'assistant', content: text });
+                        chats[currentChatId].timestamp = Date.now();
+                        saveChats();
+                        renderChatHistory();
+                    }
+                }
+                addMessageActions(div.querySelector('.message-actions'), text);
             }
-        }
-
-        const actions = div.querySelector('.message-actions');
-        addMessageActions(actions, text);
+        };
+        
+        typeEffect();
         return div;
     }
 
@@ -979,6 +1066,12 @@
             <button class="action-btn" onclick="regenerate()">
                 <span class="material-symbols-outlined">refresh</span>
                 Regenerate
+            </button>
+            <button class="action-btn" onclick="feedbackMessage(this, 'good')" title="Good response">
+                <span class="material-symbols-outlined">thumb_up</span>
+            </button>
+            <button class="action-btn" onclick="feedbackMessage(this, 'bad')" title="Needs improvement">
+                <span class="material-symbols-outlined">thumb_down</span>
             </button>
         `;
     }
@@ -1011,6 +1104,15 @@
         }
     };
 
+    window.feedbackMessage = function(btn, type) {
+        btn.style.color = type === 'good' ? 'var(--success)' : 'var(--danger)';
+        btn.disabled = true;
+        setTimeout(() => {
+            btn.style.color = 'var(--text-dim)';
+            btn.disabled = false;
+        }, 1500);
+    };
+
     // ================================
     // CHAT LOGIC
     // ================================
@@ -1031,13 +1133,25 @@
         const text = (prompt || userInput.value).trim();
         const model = modelSelect.value;
 
-        if (!text || !model || isGenerating) return;
+        if (!text || !text.length) {
+            alert('Please enter a message');
+            return;
+        }
+        if (!model || isGenerating) return;
         if (modelSelect.options[modelSelect.selectedIndex]?.disabled) return;
 
         if (!currentChatId) {
             newChat();
         } else if (conversation.length === 0) {
             updateChatTitle(text);
+        }
+
+        // Check cache first
+        const cached = getFromCache(text, model);
+        if (cached) {
+            addUserMessage(text);
+            addBotMessage(cached);
+            return;
         }
 
         userInput.value = '';
@@ -1050,6 +1164,12 @@
         botDiv.innerHTML = `
             <div class="message-avatar"><span class="material-symbols-outlined">neurology</span></div>
             <div class="message-content">
+                <div class="thinking-indicator">
+                    <span>Thinking</span>
+                    <span class="thinking-dot"></span>
+                    <span class="thinking-dot"></span>
+                    <span class="thinking-dot"></span>
+                </div>
                 <div class="content"><div class="loading"><span></span><span></span><span></span></div></div>
             </div>
         `;
@@ -1057,6 +1177,7 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
         const contentDiv = botDiv.querySelector('.content');
+        const thinkingDiv = botDiv.querySelector('.thinking-indicator');
         let fullResponse = '';
 
         try {
@@ -1069,7 +1190,10 @@
                 body: JSON.stringify({
                     message: text,
                     model: model,
-                    history: conversation
+                    history: conversation,
+                    temperature: temperature,
+                    deepThink: deepThink,
+                    internet: internetMode
                 }),
                 signal: abortController.signal
             });
@@ -1083,13 +1207,25 @@
             if (!response.body?.getReader) {
                 const json = await response.json();
                 fullResponse = json.text || json.response || json.message || JSON.stringify(json);
-                contentDiv.innerHTML = renderTextToHtml(fullResponse);
-                addMessageActions(botDiv.querySelector('.message-actions'), fullResponse);
-                conversation.push({ role: 'assistant', content: fullResponse });
-                if (chats[currentChatId]) {
-                    chats[currentChatId].messages.push({ role: 'assistant', content: fullResponse });
-                    saveChats();
-                }
+                thinkingDiv.style.display = 'none';
+                let index = 0;
+                const typeEffect = () => {
+                    if (index < fullResponse.length) {
+                        contentDiv.innerHTML = renderTextToHtml(fullResponse.slice(0, index + 1));
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        index++;
+                        setTimeout(typeEffect, 20);
+                    } else {
+                        addMessageActions(botDiv.querySelector('.message-actions'), fullResponse);
+                        saveToCache(text, model, fullResponse);
+                        conversation.push({ role: 'assistant', content: fullResponse });
+                        if (chats[currentChatId]) {
+                            chats[currentChatId].messages.push({ role: 'assistant', content: fullResponse });
+                            saveChats();
+                        }
+                    }
+                };
+                typeEffect();
                 return;
             }
 
@@ -1117,11 +1253,13 @@
                         const chunk = json.text ?? json.delta ?? json.token ?? json.content ?? '';
                         if (chunk) {
                             fullResponse += chunk;
+                            thinkingDiv.style.display = 'none';
                             contentDiv.innerHTML = renderTextToHtml(fullResponse);
                             chatContainer.scrollTop = chatContainer.scrollHeight;
                         }
                     } catch {
                         fullResponse += payload;
+                        thinkingDiv.style.display = 'none';
                         contentDiv.innerHTML = renderTextToHtml(fullResponse);
                         chatContainer.scrollTop = chatContainer.scrollHeight;
                     }
@@ -1139,6 +1277,8 @@
                 contentDiv.innerHTML = renderTextToHtml(fullResponse);
             }
 
+            thinkingDiv.style.display = 'none';
+            saveToCache(text, model, fullResponse);
             conversation.push({ role: 'assistant', content: fullResponse });
             if (chats[currentChatId]) {
                 chats[currentChatId].messages.push({ role: 'assistant', content: fullResponse });
@@ -1150,7 +1290,8 @@
             if (err.name === 'AbortError') {
                 contentDiv.innerHTML = '<span style="color: var(--text-dim)">Stopped</span>';
             } else {
-                contentDiv.innerHTML = '<span style="color: var(--danger)">Connection error</span>';
+                console.error('Error:', err);
+                contentDiv.innerHTML = '<span style="color: var(--danger)">Connection error. Check API URL in settings.</span>';
             }
         } finally {
             setGenerating(false);
@@ -1241,7 +1382,77 @@
         });
 
         document.getElementById('attachBtn').addEventListener('click', () => {
-            // TODO: Implement file attachment
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,.pdf,.txt,.doc,.docx';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File too large (max 10MB)');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const text = `[Uploaded: ${file.name} (${(file.size / 1024).toFixed(2)}KB)]`;
+                    userInput.value = text + '\n\n';
+                    userInput.focus();
+                    autoResizeTextarea();
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+
+        // Temperature slider
+        const tempSlider = document.getElementById('tempSlider');
+        const tempDisplay = document.getElementById('tempDisplay');
+        tempSlider.addEventListener('input', (e) => {
+            temperature = parseFloat(e.target.value);
+            tempDisplay.textContent = temperature.toFixed(1);
+            saveSettings();
+        });
+
+        // Deep think toggle
+        document.getElementById('deepThinkToggleSend').addEventListener('change', (e) => {
+            deepThink = e.target.checked;
+            if (document.getElementById('deepThinkToggle')) {
+                document.getElementById('deepThinkToggle').checked = deepThink;
+            }
+            saveSettings();
+        });
+
+        // Internet toggle
+        document.getElementById('internetToggleSend').addEventListener('change', (e) => {
+            internetMode = e.target.checked;
+            if (document.getElementById('internetToggle')) {
+                document.getElementById('internetToggle').checked = internetMode;
+            }
+            saveSettings();
+        });
+
+        // Deep think toggle in settings
+        if (document.getElementById('deepThinkToggle')) {
+            document.getElementById('deepThinkToggle').addEventListener('change', (e) => {
+                deepThink = e.target.checked;
+                document.getElementById('deepThinkToggleSend').checked = deepThink;
+                saveSettings();
+            });
+        }
+
+        // Internet toggle in settings
+        if (document.getElementById('internetToggle')) {
+            document.getElementById('internetToggle').addEventListener('change', (e) => {
+                internetMode = e.target.checked;
+                document.getElementById('internetToggleSend').checked = internetMode;
+                saveSettings();
+            });
+        }
+
+        // Memory cache toggle
+        document.getElementById('memoryCacheToggle').addEventListener('change', (e) => {
+            memoryCache = e.target.checked;
+            saveSettings();
         });
     }
 
@@ -1253,6 +1464,76 @@
             });
         });
     }
+
+    // ================================
+    // SETTINGS
+    // ================================
+    function loadSettings() {
+        const storedTemp = localStorage.getItem('hannah_temperature');
+        if (storedTemp) {
+            temperature = parseFloat(storedTemp);
+            document.getElementById('tempSlider').value = temperature;
+            document.getElementById('tempDisplay').textContent = temperature.toFixed(1);
+        }
+        
+        const storedDeepThink = localStorage.getItem('hannah_deepThink');
+        deepThink = storedDeepThink === 'true';
+        document.getElementById('deepThinkToggle').checked = deepThink;
+        
+        const storedInternet = localStorage.getItem('hannah_internet');
+        internetMode = storedInternet === 'true';
+        document.getElementById('internetToggle').checked = internetMode;
+        
+        const storedCache = localStorage.getItem('hannah_memoryCache');
+        memoryCache = storedCache !== 'false'; // default true
+        document.getElementById('memoryCacheToggle').checked = memoryCache;
+    }
+
+    function saveSettings() {
+        localStorage.setItem('hannah_temperature', temperature);
+        localStorage.setItem('hannah_deepThink', deepThink);
+        localStorage.setItem('hannah_internet', internetMode);
+        localStorage.setItem('hannah_memoryCache', memoryCache);
+    }
+
+    window.exportChat = function() {
+        if (!currentChatId || !chats[currentChatId]) return;
+        const chat = chats[currentChatId];
+        const content = chat.messages.map(m => `${m.role === 'user' ? 'You' : 'Hannah'}: ${m.content}`).join('\n\n');
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${chat.title || 'chat'}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    window.clearAllChats = function() {
+        if (!confirm('This will delete all conversations. Are you sure?')) return;
+        Object.keys(chats).forEach(id => delete chats[id]);
+        saveChats();
+        newChat();
+    };
+
+    window.clearCache = function() {
+        Object.keys(responseCache).forEach(key => delete responseCache[key]);
+        alert('Cache cleared!');
+    };
+
+    function getCacheKey(text, model) {
+        return `${model}:${text.slice(0, 100)}`;
+    }
+
+    function getFromCache(text, model) {
+        if (!memoryCache) return null;
+        return responseCache[getCacheKey(text, model)];
+    }
+
+    function saveToCache(text, model, response) {
+        if (!memoryCache) return;
+        responseCache[getCacheKey(text, model)] = response;
+    };
 
     // ================================
     // START
