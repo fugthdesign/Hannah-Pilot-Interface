@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hannah AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hannah 1.0 - AI Assistant</title>
+    <meta name="description" content="Hannah 1.0 - Your intelligent AI assistant powered by advanced language models">
+    <meta name="theme-color" content="#1a1a1d">
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600&family=Google+Sans+Text:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0;24,400,0,0;40,400,0,0" />
     <style>
@@ -854,6 +856,209 @@
         .toast.success { border-color: var(--success); }
         .toast.error { border-color: var(--danger); }
         .toast.info { border-color: var(--accent); }
+
+        /* ========== MOBILE MENU TOGGLE ========== */
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .mobile-menu-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
+        }
+
+        /* ========== MOBILE RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -300px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                width: 280px;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .top-bar {
+                padding: 12px 16px;
+                gap: 8px;
+            }
+
+            .brand-container {
+                flex: 1;
+            }
+
+            .brand {
+                font-size: 20px;
+            }
+
+            .version-badge {
+                display: none;
+            }
+
+            .connection-status {
+                display: none;
+            }
+
+            .model-selector {
+                padding: 6px 10px;
+            }
+
+            .model-select {
+                font-size: 12px;
+                max-width: 100px;
+            }
+
+            .chat-area {
+                padding: 16px;
+            }
+
+            .empty-logo {
+                font-size: 48px;
+            }
+
+            .greeting {
+                font-size: 24px;
+            }
+
+            .tagline {
+                font-size: 14px;
+            }
+
+            .suggestions {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .suggestion {
+                padding: 12px 16px;
+            }
+
+            .input-zone {
+                padding: 12px 16px;
+            }
+
+            .input-zone > div:first-child {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .feature-badge {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+
+            .feature-badge span:last-of-type {
+                display: none;
+            }
+
+            .input-box {
+                padding: 10px 14px;
+                gap: 8px;
+            }
+
+            .input-box textarea {
+                font-size: 14px;
+            }
+
+            .shortcuts-hint {
+                display: none;
+            }
+
+            .char-counter {
+                font-size: 9px;
+            }
+
+            .message {
+                gap: 10px;
+            }
+
+            .message-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+
+            .user-msg .content {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .bot-msg .content {
+                font-size: 14px;
+            }
+
+            .message-actions {
+                opacity: 1;
+            }
+
+            .action-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .modal-content {
+                width: 95vw;
+                padding: 20px;
+                max-height: 90vh;
+            }
+
+            .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .feature-badge {
+                padding: 4px 6px;
+            }
+
+            .input-btn {
+                padding: 6px;
+            }
+
+            .suggestions {
+                display: none;
+            }
+
+            .empty-logo {
+                font-size: 36px;
+            }
+
+            .greeting {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -884,12 +1089,18 @@
     </div>
 </aside>
 
+<!-- Mobile Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <!-- ========== MAIN ========== -->
 <main class="main">
     <header class="top-bar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" title="Menu">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
         <div class="brand-container">
             <span class="brand">Hannah</span>
-            <span class="version-badge">v0.1 Beta</span>
+            <span class="version-badge">v1.0</span>
         </div>
         <div class="connection-status" id="connectionStatus" title="Backend connection status">
             <span class="status-light connecting" id="statusLight"></span>
@@ -906,9 +1117,9 @@
 
     <div class="chat-area" id="chatContainer">
         <div class="empty-state" id="emptyState">
-            <div class="empty-logo">Hannah</div>
+            <div class="empty-logo">Hannah 1.0</div>
             <h1 class="greeting">Hello there</h1>
-            <p class="tagline">What can I help you with today?</p>
+            <p class="tagline">Your intelligent AI assistant</p>
             <div class="suggestions" id="suggestionsContainer">
                 <div class="suggestion" data-prompt="Explain quantum computing in simple terms">
                     <div class="suggestion-icon">📚</div>
@@ -1244,7 +1455,12 @@
             const item = document.createElement('div');
             item.className = `chat-item ${id === currentChatId ? 'active' : ''}`;
             item.textContent = chat.title || 'Untitled';
-            item.addEventListener('click', () => loadChat(id));
+            item.addEventListener('click', () => {
+                loadChat(id);
+                // Close sidebar on mobile
+                document.querySelector('.sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+            });
             chatList.appendChild(item);
         });
     }
@@ -1665,7 +1881,8 @@
 
             data.models?.forEach(m => {
                 const opt = document.createElement('option');
-                opt.value = m.name || m.filename;
+                // Use filename as value (backend expects filename)
+                opt.value = m.filename || m.name;
                 opt.text = m.display_name || m.name || 'Model';
                 modelSelect.add(opt);
 
@@ -1680,7 +1897,7 @@
             const statRes = await fetch(`${API_BASE}/api/status`);
             const stats = await statRes.json();
             document.getElementById('specsBody').innerHTML = `
-                <tr><td>Memory</td><td class="specs-value">${stats.ram_used} / ${stats.ram_total}</td></tr>
+                <tr><td>Memory</td><td class="specs-value">${stats.ram_used}</td></tr>
                 <tr><td>CPU</td><td class="specs-value">${stats.cpu}</td></tr>
                 <tr><td>Status</td><td class="specs-value"><span style="color: var(--success)">● Active</span></td></tr>
             `;
@@ -1689,7 +1906,7 @@
             showToast('Connected to Hannah AI', 'success');
         } catch (err) {
             console.error('Failed to load system:', err);
-            modelSelect.innerHTML = '<option value="hannah-pro">Hannah Pro</option><option value="hannah-fast">Hannah Fast</option><option value="hannah-light">Hannah Light</option>';
+            modelSelect.innerHTML = '<option value="qwen2.5-0.5b-instruct-q4_k_m.gguf">Hannah-1.0 Heavy</option><option value="qwen2.5-0.5b-instruct-q2_k.gguf">Hannah-1.0 Light</option>';
             updateConnectionStatus('disconnected');
         }
     }
@@ -1709,6 +1926,27 @@
         });
 
         setupSuggestions();
+
+        // Mobile menu toggle
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('show');
+        });
+        
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+        });
+        
+        // Close sidebar when starting a new chat on mobile
+        document.getElementById('newChatBtn').addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+        });
 
         userAvatar.addEventListener('click', () => {
             const name = prompt('Your name:', userName);
