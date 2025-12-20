@@ -405,6 +405,14 @@
             opacity: 1;
         }
 
+        .user-msg:hover .message-actions {
+            opacity: 1;
+        }
+
+        .user-msg .message-actions {
+            justify-content: flex-end;
+        }
+
         .action-btn {
             background: transparent;
             border: 1px solid var(--border);
@@ -857,6 +865,82 @@
         .toast.error { border-color: var(--danger); }
         .toast.info { border-color: var(--accent); }
 
+        /* ========== MARKDOWN CONTENT ========== */
+        .content pre {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            overflow: auto;
+            margin: 10px 0;
+        }
+
+        .content code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.92em;
+        }
+
+        .content p {
+            margin: 0;
+        }
+
+        .content p + p {
+            margin-top: 10px;
+        }
+
+        .content ul,
+        .content ol {
+            margin: 8px 0 8px 20px;
+            padding: 0;
+        }
+
+        .content li {
+            margin: 4px 0;
+        }
+
+        .content blockquote {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-left: 3px solid var(--accent);
+            background: var(--bg-hover);
+            border-radius: 10px;
+            color: var(--text);
+        }
+
+        .content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .content a:hover {
+            text-decoration: underline;
+        }
+
+        .content hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 12px 0;
+        }
+
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .content th,
+        .content td {
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        .content th {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+
         /* ========== MOBILE MENU TOGGLE ========== */
         .mobile-menu-btn {
             display: none;
@@ -1278,6 +1362,10 @@
 </div>
 
 
+<!-- Markdown + optional code highlighting (safe fallback if CDN blocked) -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js" defer></script>
+
 <script>
     // ================================
     // CONFIGURATION
@@ -1441,6 +1529,20 @@
         const saved = localStorage.getItem('hannah_chats');
         if (saved) {
             Object.assign(chats, JSON.parse(saved));
+
+            // Backfill message ids for older saved chats
+            let changed = false;
+            for (const chat of Object.values(chats)) {
+                if (!chat?.messages || !Array.isArray(chat.messages)) continue;
+                for (const m of chat.messages) {
+                    if (!m.id) {
+                        m.id = generateMessageId();
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) saveChats();
+
             renderChatHistory();
         }
     }
@@ -1491,9 +1593,9 @@
 
         chat.messages.forEach(msg => {
             if (msg.role === 'user') {
-                addUserMessage(msg.content, false);
+                addUserMessage(msg, false);
             } else {
-                addBotMessage(msg.content, false);
+                addBotMessage(msg, false);
             }
         });
 
@@ -1518,6 +1620,76 @@
     // ================================
     // MESSAGE RENDERING
     // ================================
+    function generateMessageId() {
+        return `m_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
+    }
+
+    function normalizeMsg(input) {
+        if (input && typeof input === 'object') {
+            return {
+                id: input.id || null,
+                role: input.role || null,
+                content: input.content ?? '',
+                feedback: input.feedback || null
+            };
+        }
+        return { id: null, role: null, content: input ?? '', feedback: null };
+    }
+
+    function getChatMessages() {
+        const chat = chats[currentChatId];
+        return chat?.messages || null;
+    }
+
+    function getLastTurnIds() {
+        const chatMessages = getChatMessages();
+        if (!chatMessages || chatMessages.length === 0) return { userId: null, assistantId: null };
+
+        let assistantId = null;
+        let userId = null;
+
+        for (let i = chatMessages.length - 1; i >= 0; i--) {
+            if (!assistantId && chatMessages[i].role === 'assistant') assistantId = chatMessages[i].id;
+            if (assistantId && chatMessages[i].role === 'user') { userId = chatMessages[i].id; break; }
+        }
+
+        return { userId, assistantId };
+    }
+
+    function removeLastTurnFromStateAndUI() {
+        // Removes the last assistant message and the preceding user message
+        const chatMessages = getChatMessages();
+        if (!chatMessages || chatMessages.length < 1) return false;
+
+        const { userId, assistantId } = getLastTurnIds();
+        if (!assistantId || !userId) return false;
+
+        // Remove from chat state
+        chats[currentChatId].messages = chatMessages.filter(m => m.id !== assistantId && m.id !== userId);
+
+        // Remove from conversation state (best-effort; it stores role/content only)
+        for (let pass = 0; pass < 2; pass++) {
+            const targetRole = pass === 0 ? 'assistant' : 'user';
+            for (let i = conversation.length - 1; i >= 0; i--) {
+                if (conversation[i].role === targetRole) {
+                    conversation.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        // Remove from UI
+        [...chatContainer.querySelectorAll('.message')].forEach((node) => {
+            if (node?.dataset?.messageId === assistantId || node?.dataset?.messageId === userId) {
+                node.remove();
+            }
+        });
+
+        saveChats();
+        renderChatHistory();
+        return true;
+    }
+
     function escapeHtml(str) {
         return String(str)
             .replaceAll('&', '&amp;')
@@ -1527,33 +1699,122 @@
             .replaceAll("'", '&#39;');
     }
 
-    function renderTextToHtml(text) {
+    function renderPlainTextToHtml(text) {
         return escapeHtml(text).replace(/\n/g, '<br>');
+    }
+
+    function sanitizeUrl(href) {
+        try {
+            const url = new URL(href, window.location.href);
+            const protocol = url.protocol.toLowerCase();
+            if (protocol === 'http:' || protocol === 'https:' || protocol === 'mailto:') {
+                return url.href;
+            }
+            return '#';
+        } catch {
+            return '#';
+        }
+    }
+
+    function renderMarkdownToHtml(text) {
+        // Fallback if marked is not available
+        if (typeof marked === 'undefined' || !marked?.parse) {
+            return renderPlainTextToHtml(text);
+        }
+
+        // Configure marked once
+        if (!renderMarkdownToHtml._configured) {
+            const renderer = new marked.Renderer();
+
+            // Block raw HTML (safety)
+            renderer.html = (html) => escapeHtml(html);
+
+            renderer.code = (code, infostring) => {
+                const lang = (infostring || '').trim();
+                const safeCode = escapeHtml(code);
+                const langClass = lang ? `language-${escapeHtml(lang)}` : '';
+                return `<pre><code class="${langClass}">${safeCode}</code></pre>`;
+            };
+
+            renderer.link = (href, title, text) => {
+                const safeHref = sanitizeUrl(href || '#');
+                const safeText = text || safeHref;
+                const safeTitle = title ? ` title="${escapeHtml(title)}"` : '';
+                return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer"${safeTitle}>${safeText}</a>`;
+            };
+
+            marked.setOptions({
+                gfm: true,
+                breaks: true,
+                mangle: false,
+                headerIds: false,
+                renderer
+            });
+
+            renderMarkdownToHtml._configured = true;
+        }
+
+        return marked.parse(text);
+    }
+
+    function highlightCodeBlocks(container) {
+        // Optional syntax highlighting; safe no-op if hljs missing
+        if (!container) return;
+        if (typeof hljs === 'undefined' || !hljs?.highlightElement) return;
+        container.querySelectorAll('pre code').forEach((block) => {
+            try {
+                hljs.highlightElement(block);
+            } catch {
+                // ignore
+            }
+        });
+    }
+
+    function finalizeAssistantContent(contentDiv, text) {
+        contentDiv.innerHTML = renderMarkdownToHtml(text);
+        highlightCodeBlocks(contentDiv);
     }
 
     function addUserMessage(text, save = true) {
         emptyState.style.display = 'none';
+        const msg = normalizeMsg(text);
+        const content = msg.content;
+        const messageId = msg.id || generateMessageId();
+
         const div = document.createElement('div');
         div.className = 'message user-msg';
+        div.dataset.messageId = messageId;
         div.innerHTML = `
             <div class="message-avatar">${userAvatar.textContent}</div>
-            <div class="content">${renderTextToHtml(text)}</div>
+            <div class="message-content">
+                <div class="content">${renderPlainTextToHtml(content)}</div>
+                <div class="message-actions"></div>
+            </div>
         `;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
+        addUserActions(div.querySelector('.message-actions'), messageId);
+
         if (save) {
-            conversation.push({ role: 'user', content: text });
+            conversation.push({ role: 'user', content: content });
             if (chats[currentChatId]) {
-                chats[currentChatId].messages.push({ role: 'user', content: text });
+                chats[currentChatId].messages.push({ id: messageId, role: 'user', content: content });
                 saveChats();
             }
         }
+
+        return messageId;
     }
 
     function addBotMessage(text, save = true) {
+        const msg = normalizeMsg(text);
+        const content = msg.content;
+        const messageId = msg.id || generateMessageId();
+
         const div = document.createElement('div');
         div.className = 'message bot-msg';
+        div.dataset.messageId = messageId;
         div.innerHTML = `
             <div class="message-avatar"><span class="material-symbols-outlined">neurology</span></div>
             <div class="message-content">
@@ -1565,26 +1826,35 @@
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
         const contentDiv = div.querySelector('.content');
+
+        // If this is history rendering (save=false), render immediately (no typing)
+        if (!save) {
+            finalizeAssistantContent(contentDiv, content);
+            addMessageActions(div.querySelector('.message-actions'), content, messageId, msg.feedback);
+            return div;
+        }
         
         // Typing effect
         let index = 0;
         const typeEffect = () => {
-            if (index < text.length) {
-                contentDiv.innerHTML = renderTextToHtml(text.slice(0, index + 1));
+            if (index < content.length) {
+                contentDiv.innerHTML = renderPlainTextToHtml(content.slice(0, index + 1));
                 chatContainer.scrollTop = chatContainer.scrollHeight;
                 index++;
                 setTimeout(typeEffect, 20); // 20ms per character
             } else {
+                // Replace plain typing render with formatted Markdown
+                finalizeAssistantContent(contentDiv, content);
                 if (save) {
-                    conversation.push({ role: 'assistant', content: text });
+                    conversation.push({ role: 'assistant', content: content });
                     if (chats[currentChatId]) {
-                        chats[currentChatId].messages.push({ role: 'assistant', content: text });
+                        chats[currentChatId].messages.push({ id: messageId, role: 'assistant', content: content });
                         chats[currentChatId].timestamp = Date.now();
                         saveChats();
                         renderChatHistory();
                     }
                 }
-                addMessageActions(div.querySelector('.message-actions'), text);
+                addMessageActions(div.querySelector('.message-actions'), content, messageId, null);
             }
         };
         
@@ -1592,9 +1862,23 @@
         return div;
     }
 
-    function addMessageActions(container, text) {
+    function addUserActions(container, userMessageId) {
         container.innerHTML = `
-            <button class="action-btn" onclick="copyText(this, '${escapeHtml(text).replace(/'/g, "\\'")}')">
+            <button class="action-btn" onclick="editAsk('${escapeHtml(userMessageId)}')">
+                <span class="material-symbols-outlined">edit</span>
+                Edit
+            </button>
+        `;
+    }
+
+    function addMessageActions(container, text, messageId = '', feedback = null) {
+        const escapedText = escapeHtml(text).replace(/'/g, "\\'");
+        const safeId = escapeHtml(messageId || '').replace(/'/g, "\\'");
+        const goodStyle = feedback === 'good' ? 'style="color: var(--success); border-color: var(--success);"' : '';
+        const badStyle = feedback === 'bad' ? 'style="color: var(--danger); border-color: var(--danger);"' : '';
+
+        container.innerHTML = `
+            <button class="action-btn" onclick="copyText(this, '${escapedText}')">
                 <span class="material-symbols-outlined">content_copy</span>
                 Copy
             </button>
@@ -1602,10 +1886,10 @@
                 <span class="material-symbols-outlined">refresh</span>
                 Regenerate
             </button>
-            <button class="action-btn" onclick="feedbackMessage(this, 'good')" title="Good response">
+            <button class="action-btn" ${goodStyle} onclick="feedbackMessage(this, 'good', '${safeId}')" title="Good response">
                 <span class="material-symbols-outlined">thumb_up</span>
             </button>
-            <button class="action-btn" onclick="feedbackMessage(this, 'bad')" title="Needs improvement">
+            <button class="action-btn" ${badStyle} onclick="feedbackMessage(this, 'bad', '${safeId}')" title="Needs improvement">
                 <span class="material-symbols-outlined">thumb_down</span>
             </button>
         `;
@@ -1627,25 +1911,73 @@
     };
 
     window.regenerate = function() {
-        if (conversation.length < 2) return;
-        const lastUser = [...conversation].reverse().find(m => m.role === 'user');
-        if (lastUser) {
-            conversation.pop();
-            const messages = chatContainer.querySelectorAll('.message');
-            if (messages.length >= 2) {
-                messages[messages.length - 1].remove();
-            }
-            sendMessage(lastUser.content);
-        }
+        if (isGenerating) return;
+        const chatMessages = getChatMessages();
+        if (!chatMessages || chatMessages.length < 2) return;
+
+        const { userId, assistantId } = getLastTurnIds();
+        if (!userId || !assistantId) return;
+        const lastUserMsg = chatMessages.find(m => m.id === userId);
+        if (!lastUserMsg?.content) return;
+
+        const ok = removeLastTurnFromStateAndUI();
+        if (!ok) return;
+        sendMessage(lastUserMsg.content);
     };
 
-    window.feedbackMessage = function(btn, type) {
+    window.editAsk = function(userMessageId) {
+        if (isGenerating) return;
+        const chatMessages = getChatMessages();
+        if (!chatMessages || chatMessages.length < 1) return;
+
+        const { userId } = getLastTurnIds();
+        if (!userId || userId !== userMessageId) {
+            showToast('You can only edit your last message.', 'info');
+            return;
+        }
+
+        const lastUserMsg = chatMessages.find(m => m.id === userMessageId);
+        if (!lastUserMsg?.content) return;
+
+        // Remove last turn (user+assistant) if possible
+        const removed = removeLastTurnFromStateAndUI();
+        if (!removed) {
+            // Fallback: remove only the last user message
+            chats[currentChatId].messages = chatMessages.filter(m => m.id !== userMessageId);
+            saveChats();
+            renderChatHistory();
+            [...chatContainer.querySelectorAll('.message')].forEach((node) => {
+                if (node?.dataset?.messageId === userMessageId) node.remove();
+            });
+            for (let i = conversation.length - 1; i >= 0; i--) {
+                if (conversation[i].role === 'user') { conversation.splice(i, 1); break; }
+            }
+        }
+
+        userInput.value = lastUserMsg.content;
+        autoResizeTextarea();
+        userInput.focus();
+        showToast('Edit your message and press Send.', 'info');
+    };
+
+    window.feedbackMessage = function(btn, type, messageId = '') {
         btn.style.color = type === 'good' ? 'var(--success)' : 'var(--danger)';
-        btn.disabled = true;
-        setTimeout(() => {
-            btn.style.color = 'var(--text-dim)';
-            btn.disabled = false;
-        }, 1500);
+        btn.style.borderColor = type === 'good' ? 'var(--success)' : 'var(--danger)';
+
+        try {
+            if (messageId) {
+                const chatMessages = getChatMessages();
+                const msg = chatMessages?.find(m => m.id === messageId);
+                if (msg && msg.role === 'assistant') {
+                    msg.feedback = type;
+                    saveChats();
+                }
+            }
+        } catch {
+            // ignore
+        }
+
+        showToast(type === 'good' ? 'Thanks for the feedback!' : 'Got it — I will improve.', 'success');
     };
 
     // ================================
@@ -1709,6 +2041,8 @@
 
         const botDiv = document.createElement('div');
         botDiv.className = 'message bot-msg';
+        const assistantMessageId = generateMessageId();
+        botDiv.dataset.messageId = assistantMessageId;
         botDiv.innerHTML = `
             <div class="message-avatar"><span class="material-symbols-outlined">neurology</span></div>
             <div class="message-content">
@@ -1719,6 +2053,7 @@
                     <span class="thinking-dot"></span>
                 </div>
                 <div class="content"><div class="loading"><span></span><span></span><span></span></div></div>
+                <div class="message-actions"></div>
             </div>
         `;
         chatContainer.appendChild(botDiv);
@@ -1747,6 +2082,14 @@
             });
 
             if (!response.ok) {
+                let details = '';
+                try {
+                    const raw = await response.text();
+                    details = raw ? raw.slice(0, 600) : '';
+                } catch {
+                    // ignore
+                }
+                console.error('Backend error:', response.status, details);
                 throw new Error(`HTTP ${response.status}`);
             }
 
@@ -1759,11 +2102,12 @@
                 let index = 0;
                 const typeEffect = () => {
                     if (index < fullResponse.length) {
-                        contentDiv.innerHTML = renderTextToHtml(fullResponse.slice(0, index + 1));
+                        contentDiv.innerHTML = renderPlainTextToHtml(fullResponse.slice(0, index + 1));
                         chatContainer.scrollTop = chatContainer.scrollHeight;
                         index++;
                         setTimeout(typeEffect, 20);
                     } else {
+                        finalizeAssistantContent(contentDiv, fullResponse);
                         // Add response time
                         const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
                         const timeDiv = document.createElement('div');
@@ -1771,11 +2115,11 @@
                         timeDiv.textContent = `Response time: ${responseTime}s`;
                         botDiv.querySelector('.message-content').appendChild(timeDiv);
                         
-                        addMessageActions(botDiv.querySelector('.message-actions'), fullResponse);
+                        addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
                         saveToCache(text, model, fullResponse);
                         conversation.push({ role: 'assistant', content: fullResponse });
                         if (chats[currentChatId]) {
-                            chats[currentChatId].messages.push({ role: 'assistant', content: fullResponse });
+                            chats[currentChatId].messages.push({ id: assistantMessageId, role: 'assistant', content: fullResponse });
                             saveChats();
                         }
                     }
@@ -1809,13 +2153,14 @@
                         if (chunk) {
                             fullResponse += chunk;
                             thinkingDiv.style.display = 'none';
-                            contentDiv.innerHTML = renderTextToHtml(fullResponse);
+                            // Keep streaming render lightweight; format at end
+                            contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
                             chatContainer.scrollTop = chatContainer.scrollHeight;
                         }
                     } catch {
                         fullResponse += payload;
                         thinkingDiv.style.display = 'none';
-                        contentDiv.innerHTML = renderTextToHtml(fullResponse);
+                        contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
                         chatContainer.scrollTop = chatContainer.scrollHeight;
                     }
                 }
@@ -1829,14 +2174,15 @@
                 } catch {
                     fullResponse += buffer.trim();
                 }
-                contentDiv.innerHTML = renderTextToHtml(fullResponse);
+                contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
             }
 
             thinkingDiv.style.display = 'none';
+            finalizeAssistantContent(contentDiv, fullResponse);
             saveToCache(text, model, fullResponse);
             conversation.push({ role: 'assistant', content: fullResponse });
             if (chats[currentChatId]) {
-                chats[currentChatId].messages.push({ role: 'assistant', content: fullResponse });
+                chats[currentChatId].messages.push({ id: assistantMessageId, role: 'assistant', content: fullResponse });
                 saveChats();
             }
             
@@ -1847,7 +2193,7 @@
             timeDiv.textContent = `Response time: ${responseTime}s`;
             botDiv.querySelector('.message-content').appendChild(timeDiv);
             
-            addMessageActions(botDiv.querySelector('.message-actions'), fullResponse);
+            addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
 
         } catch (err) {
             if (err.name === 'AbortError') {
@@ -1855,11 +2201,15 @@
                 showToast('Generation stopped', 'info');
             } else {
                 console.error('Error:', err);
-                contentDiv.innerHTML = '<span style="color: var(--danger)">Connection error. The backend may be sleeping.</span>';
+                const msg = (err?.message || 'Request failed').toString();
+                contentDiv.innerHTML = `<span style="color: var(--danger)">Request failed: ${escapeHtml(msg)}</span>`;
                 updateConnectionStatus('disconnected');
                 showToast('Connection lost. Trying to reconnect...', 'error');
                 checkConnection();
             }
+
+            // Keep actions available so the user can Regenerate immediately
+            addMessageActions(botDiv.querySelector('.message-actions'), fullResponse || '', assistantMessageId, null);
         } finally {
             setGenerating(false);
             abortController = null;
