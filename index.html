@@ -661,6 +661,199 @@
             0%, 100% { opacity: 0.3; transform: scale(0.8); }
             50% { opacity: 1; transform: scale(1.2); }
         }
+
+        /* Connection Status */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-sidebar);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .status-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .status-light.connected {
+            background: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+            animation: glow-green 2s infinite;
+        }
+
+        .status-light.connecting {
+            background: #60a5fa;
+            box-shadow: 0 0 8px #60a5fa;
+            animation: glow-blue 1s infinite;
+        }
+
+        .status-light.disconnected {
+            background: #f87171;
+            box-shadow: 0 0 8px #f87171;
+            animation: none;
+        }
+
+        @keyframes glow-green {
+            0%, 100% { box-shadow: 0 0 4px #4ade80; }
+            50% { box-shadow: 0 0 12px #4ade80; }
+        }
+
+        @keyframes glow-blue {
+            0%, 100% { box-shadow: 0 0 4px #60a5fa; opacity: 0.7; }
+            50% { box-shadow: 0 0 12px #60a5fa; opacity: 1; }
+        }
+
+        .version-badge {
+            font-size: 10px;
+            color: var(--text-dim);
+            background: var(--bg-hover);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Mic button */
+        .mic-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .mic-btn:hover {
+            background: var(--bg-hover);
+            color: var(--accent);
+        }
+
+        .mic-btn.recording {
+            color: var(--danger);
+            animation: pulse-mic 1s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Character counter */
+        .char-counter {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-align: right;
+            padding: 4px 12px 0;
+        }
+
+        .char-counter.warning {
+            color: var(--warning);
+        }
+
+        .char-counter.danger {
+            color: var(--danger);
+        }
+
+        /* Keyboard shortcuts tooltip */
+        .shortcuts-hint {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: center;
+            padding: 8px;
+            opacity: 0.7;
+        }
+
+        .shortcuts-hint kbd {
+            background: var(--bg-hover);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-family: monospace;
+            font-size: 10px;
+        }
+
+        /* Response time badge */
+        .response-time {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        /* Feature badges in input area */
+        .feature-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-sidebar);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .feature-badge:hover {
+            border-color: var(--accent);
+        }
+
+        .feature-badge.active {
+            background: rgba(138, 180, 248, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .feature-badge input[type="checkbox"] {
+            display: none;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 13px;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        .toast.info { border-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -684,9 +877,9 @@
             <span class="material-symbols-outlined">settings</span>
             <span>Settings</span>
         </div>
-        <div class="location">
-            <span class="status-dot"></span>
-            <span>Online</span>
+        <div class="location" id="sidebarStatus">
+            <span class="status-dot" id="sidebarDot"></span>
+            <span id="sidebarStatusText">Connecting...</span>
         </div>
     </div>
 </aside>
@@ -694,7 +887,14 @@
 <!-- ========== MAIN ========== -->
 <main class="main">
     <header class="top-bar">
-        <span class="brand">Hannah</span>
+        <div class="brand-container">
+            <span class="brand">Hannah</span>
+            <span class="version-badge">v0.1 Beta</span>
+        </div>
+        <div class="connection-status" id="connectionStatus" title="Backend connection status">
+            <span class="status-light connecting" id="statusLight"></span>
+            <span id="statusText">Connecting...</span>
+        </div>
         <div class="model-selector">
             <span class="material-symbols-outlined" style="font-size: 20px; color: var(--accent);">neurology</span>
             <select id="modelSelect" class="model-select">
@@ -736,20 +936,30 @@
 
     <div class="input-zone">
         <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-sidebar); border-radius: 16px; border: 1px solid var(--border);">
-                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">lightbulb</span>
-                <input type="checkbox" id="deepThinkToggleSend" style="width: 16px; height: 16px; cursor: pointer;">
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--bg-sidebar); border-radius: 16px; border: 1px solid var(--border);">
-                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent);">language</span>
-                <input type="checkbox" id="internetToggleSend" style="width: 16px; height: 16px; cursor: pointer;">
-            </div>
+            <label class="feature-badge" id="deepThinkBadge" title="Enhanced reasoning for complex questions">
+                <span class="material-symbols-outlined" style="font-size: 16px;">psychology</span>
+                <span>Deep Think</span>
+                <input type="checkbox" id="deepThinkToggleSend">
+            </label>
+            <label class="feature-badge" id="internetBadge" title="Search the web for latest information">
+                <span class="material-symbols-outlined" style="font-size: 16px;">travel_explore</span>
+                <span>Web Search</span>
+                <input type="checkbox" id="internetToggleSend">
+            </label>
+            <label class="feature-badge" id="creativeBadge" title="More creative responses">
+                <span class="material-symbols-outlined" style="font-size: 16px;">auto_awesome</span>
+                <span>Creative</span>
+                <input type="checkbox" id="creativeToggle">
+            </label>
         </div>
         <div class="input-box">
-            <button class="input-btn" id="attachBtn" title="Attach file">
-                <span class="material-symbols-outlined">add_circle</span>
+            <button class="input-btn" id="attachBtn" title="Attach file (images, PDF, text)">
+                <span class="material-symbols-outlined">attach_file</span>
             </button>
-            <textarea id="userInput" placeholder="Ask Hannah anything..." rows="1"></textarea>
+            <button class="mic-btn" id="micBtn" title="Voice input">
+                <span class="material-symbols-outlined">mic</span>
+            </button>
+            <textarea id="userInput" placeholder="Ask Hannah anything..." rows="1" maxlength="4000"></textarea>
             <button class="input-btn" id="stopBtn" style="display:none" title="Stop generation">
                 <span class="material-symbols-outlined">stop_circle</span>
             </button>
@@ -757,7 +967,12 @@
                 <span class="material-symbols-outlined">send</span>
             </button>
         </div>
+        <div class="char-counter" id="charCounter">0 / 4000</div>
+        <div class="shortcuts-hint"><kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line</div>
     </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
 </main>
 
 <!-- ========== MODALS ========== -->
@@ -789,6 +1004,17 @@
         <div class="modal-header">
             <span class="modal-title">Settings</span>
             <button class="modal-close" id="settingsCloseBtn">✕</button>
+        </div>
+
+        <div class="modal-section">
+            <div class="section-title">Connection</div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-hover); border-radius: 12px; margin-bottom: 8px;">
+                <span class="status-light" id="settingsStatusLight"></span>
+                <span style="flex: 1; font-size: 13px;" id="settingsStatusText">Checking...</span>
+                <button onclick="reconnectBackend()" style="padding: 6px 12px; background: var(--accent); border: none; border-radius: 8px; color: var(--bg-body); cursor: pointer; font-size: 12px; font-weight: 500;">
+                    Reconnect
+                </button>
+            </div>
         </div>
 
         <div class="modal-section">
@@ -878,8 +1104,101 @@
     let deepThink = false;
     let internetMode = false;
     let memoryCache = true;
+    let creativeMode = false;
+    let isConnected = false;
+    let connectionRetries = 0;
+    const MAX_RETRIES = 3;
     const responseCache = {}; // Cache for quick responses
     const chats = {}; // { chatId: { title, messages, timestamp } }
+
+    // Connection status elements
+    const statusLight = document.getElementById('statusLight');
+    const statusText = document.getElementById('statusText');
+    const sidebarDot = document.getElementById('sidebarDot');
+    const sidebarStatusText = document.getElementById('sidebarStatusText');
+
+    // ================================
+    // CONNECTION STATUS
+    // ================================
+    function updateConnectionStatus(status) {
+        // status: 'connected', 'connecting', 'disconnected'
+        statusLight.className = 'status-light ' + status;
+        
+        const statusMessages = {
+            connected: 'Connected',
+            connecting: 'Waking up...',
+            disconnected: 'Offline'
+        };
+        
+        statusText.textContent = statusMessages[status];
+        sidebarStatusText.textContent = statusMessages[status];
+        
+        // Update sidebar dot color
+        if (status === 'connected') {
+            sidebarDot.style.background = '#4ade80';
+        } else if (status === 'connecting') {
+            sidebarDot.style.background = '#60a5fa';
+        } else {
+            sidebarDot.style.background = '#f87171';
+        }
+        
+        // Update settings modal status
+        const settingsStatusLight = document.getElementById('settingsStatusLight');
+        const settingsStatusText = document.getElementById('settingsStatusText');
+        if (settingsStatusLight) settingsStatusLight.className = 'status-light ' + status;
+        if (settingsStatusText) settingsStatusText.textContent = statusMessages[status];
+        
+        isConnected = status === 'connected';
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('toast');
+        const icons = {
+            success: 'check_circle',
+            error: 'error',
+            info: 'info'
+        };
+        toast.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">${icons[type]}</span>${message}`;
+        toast.className = 'toast ' + type + ' show';
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    async function checkConnection() {
+        updateConnectionStatus('connecting');
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            
+            const res = await fetch(`${API_BASE}/api/status`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            if (res.ok) {
+                updateConnectionStatus('connected');
+                connectionRetries = 0;
+                return true;
+            }
+            throw new Error('Bad response');
+        } catch (err) {
+            if (connectionRetries < MAX_RETRIES) {
+                connectionRetries++;
+                showToast(`Retrying connection (${connectionRetries}/${MAX_RETRIES})...`, 'info');
+                setTimeout(checkConnection, 3000);
+            } else {
+                updateConnectionStatus('disconnected');
+                showToast('Backend offline. Check your HuggingFace Space.', 'error');
+            }
+            return false;
+        }
+    }
+
+    // Periodic connection check
+    setInterval(() => {
+        if (!isGenerating) {
+            checkConnection();
+        }
+    }, 60000); // Check every 60 seconds
 
     // ================================
     // INITIALIZATION
@@ -887,7 +1206,7 @@
     function init() {
         initAvatar();
         loadChats();
-        loadSystem();
+        checkConnection().then(() => loadSystem());
         setupEventListeners();
         loadSettings();
     }
@@ -1134,11 +1453,23 @@
         const model = modelSelect.value;
 
         if (!text || !text.length) {
-            alert('Please enter a message');
+            showToast('Please enter a message', 'error');
             return;
         }
         if (!model || isGenerating) return;
         if (modelSelect.options[modelSelect.selectedIndex]?.disabled) return;
+        
+        // Check connection first
+        if (!isConnected) {
+            showToast('Reconnecting to backend...', 'info');
+            const connected = await checkConnection();
+            if (!connected) {
+                showToast('Cannot reach backend. Please check your connection.', 'error');
+                return;
+            }
+        }
+
+        const startTime = Date.now();
 
         if (!currentChatId) {
             newChat();
@@ -1156,6 +1487,7 @@
 
         userInput.value = '';
         autoResizeTextarea();
+        document.getElementById('charCounter').textContent = '0 / 4000';
 
         addUserMessage(text);
 
@@ -1216,6 +1548,13 @@
                         index++;
                         setTimeout(typeEffect, 20);
                     } else {
+                        // Add response time
+                        const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
+                        const timeDiv = document.createElement('div');
+                        timeDiv.className = 'response-time';
+                        timeDiv.textContent = `Response time: ${responseTime}s`;
+                        botDiv.querySelector('.message-content').appendChild(timeDiv);
+                        
                         addMessageActions(botDiv.querySelector('.message-actions'), fullResponse);
                         saveToCache(text, model, fullResponse);
                         conversation.push({ role: 'assistant', content: fullResponse });
@@ -1284,14 +1623,26 @@
                 chats[currentChatId].messages.push({ role: 'assistant', content: fullResponse });
                 saveChats();
             }
+            
+            // Add response time
+            const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'response-time';
+            timeDiv.textContent = `Response time: ${responseTime}s`;
+            botDiv.querySelector('.message-content').appendChild(timeDiv);
+            
             addMessageActions(botDiv.querySelector('.message-actions'), fullResponse);
 
         } catch (err) {
             if (err.name === 'AbortError') {
                 contentDiv.innerHTML = '<span style="color: var(--text-dim)">Stopped</span>';
+                showToast('Generation stopped', 'info');
             } else {
                 console.error('Error:', err);
-                contentDiv.innerHTML = '<span style="color: var(--danger)">Connection error. Check API URL in settings.</span>';
+                contentDiv.innerHTML = '<span style="color: var(--danger)">Connection error. The backend may be sleeping.</span>';
+                updateConnectionStatus('disconnected');
+                showToast('Connection lost. Trying to reconnect...', 'error');
+                checkConnection();
             }
         } finally {
             setGenerating(false);
@@ -1304,6 +1655,8 @@
     // ================================
     async function loadSystem() {
         try {
+            updateConnectionStatus('connecting');
+            
             const res = await fetch(`${API_BASE}/api/models`);
             const data = await res.json();
             modelSelect.innerHTML = '';
@@ -1331,9 +1684,13 @@
                 <tr><td>CPU</td><td class="specs-value">${stats.cpu}</td></tr>
                 <tr><td>Status</td><td class="specs-value"><span style="color: var(--success)">● Active</span></td></tr>
             `;
+            
+            updateConnectionStatus('connected');
+            showToast('Connected to Hannah AI', 'success');
         } catch (err) {
             console.error('Failed to load system:', err);
-            modelSelect.innerHTML = '<option>Hannah Pro</option>';
+            modelSelect.innerHTML = '<option value="hannah-pro">Hannah Pro</option><option value="hannah-fast">Hannah Fast</option><option value="hannah-light">Hannah Light</option>';
+            updateConnectionStatus('disconnected');
         }
     }
 
@@ -1454,6 +1811,82 @@
             memoryCache = e.target.checked;
             saveSettings();
         });
+
+        // Creative mode toggle
+        document.getElementById('creativeToggle').addEventListener('change', (e) => {
+            creativeMode = e.target.checked;
+            document.getElementById('creativeBadge').classList.toggle('active', creativeMode);
+            if (creativeMode) {
+                temperature = 1.5;
+                document.getElementById('tempSlider').value = 1.5;
+                document.getElementById('tempDisplay').textContent = '1.5';
+            } else {
+                temperature = 0.7;
+                document.getElementById('tempSlider').value = 0.7;
+                document.getElementById('tempDisplay').textContent = '0.7';
+            }
+            saveSettings();
+        });
+
+        // Feature badge active states
+        document.getElementById('deepThinkToggleSend').addEventListener('change', function() {
+            document.getElementById('deepThinkBadge').classList.toggle('active', this.checked);
+        });
+        document.getElementById('internetToggleSend').addEventListener('change', function() {
+            document.getElementById('internetBadge').classList.toggle('active', this.checked);
+        });
+
+        // Character counter
+        userInput.addEventListener('input', () => {
+            const len = userInput.value.length;
+            const counter = document.getElementById('charCounter');
+            counter.textContent = `${len} / 4000`;
+            counter.className = 'char-counter';
+            if (len > 3500) counter.classList.add('danger');
+            else if (len > 3000) counter.classList.add('warning');
+        });
+
+        // Mic button - voice input
+        const micBtn = document.getElementById('micBtn');
+        let recognition = null;
+        
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0].transcript)
+                    .join('');
+                userInput.value = transcript;
+                autoResizeTextarea();
+                document.getElementById('charCounter').textContent = `${transcript.length} / 4000`;
+            };
+            
+            recognition.onend = () => {
+                micBtn.classList.remove('recording');
+            };
+            
+            recognition.onerror = () => {
+                micBtn.classList.remove('recording');
+                showToast('Voice input failed. Try again.', 'error');
+            };
+            
+            micBtn.addEventListener('click', () => {
+                if (micBtn.classList.contains('recording')) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                    micBtn.classList.add('recording');
+                    showToast('Listening...', 'info');
+                }
+            });
+        } else {
+            micBtn.style.display = 'none';
+        }
     }
 
     function setupSuggestions() {
@@ -1479,14 +1912,23 @@
         const storedDeepThink = localStorage.getItem('hannah_deepThink');
         deepThink = storedDeepThink === 'true';
         document.getElementById('deepThinkToggle').checked = deepThink;
+        document.getElementById('deepThinkToggleSend').checked = deepThink;
+        if (deepThink) document.getElementById('deepThinkBadge').classList.add('active');
         
         const storedInternet = localStorage.getItem('hannah_internet');
         internetMode = storedInternet === 'true';
         document.getElementById('internetToggle').checked = internetMode;
+        document.getElementById('internetToggleSend').checked = internetMode;
+        if (internetMode) document.getElementById('internetBadge').classList.add('active');
         
         const storedCache = localStorage.getItem('hannah_memoryCache');
         memoryCache = storedCache !== 'false'; // default true
         document.getElementById('memoryCacheToggle').checked = memoryCache;
+        
+        const storedCreative = localStorage.getItem('hannah_creative');
+        creativeMode = storedCreative === 'true';
+        document.getElementById('creativeToggle').checked = creativeMode;
+        if (creativeMode) document.getElementById('creativeBadge').classList.add('active');
     }
 
     function saveSettings() {
@@ -1494,6 +1936,7 @@
         localStorage.setItem('hannah_deepThink', deepThink);
         localStorage.setItem('hannah_internet', internetMode);
         localStorage.setItem('hannah_memoryCache', memoryCache);
+        localStorage.setItem('hannah_creative', creativeMode);
     }
 
     window.exportChat = function() {
@@ -1518,7 +1961,15 @@
 
     window.clearCache = function() {
         Object.keys(responseCache).forEach(key => delete responseCache[key]);
-        alert('Cache cleared!');
+        showToast('Cache cleared!', 'success');
+    };
+
+    window.reconnectBackend = function() {
+        showToast('Reconnecting...', 'info');
+        connectionRetries = 0;
+        checkConnection().then(connected => {
+            if (connected) loadSystem();
+        });
     };
 
     function getCacheKey(text, model) {
