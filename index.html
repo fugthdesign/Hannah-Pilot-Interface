@@ -403,6 +403,7 @@
             flex-direction: column;
             gap: 8px;
             max-width: 700px;
+            font-size: var(--text-size);
         }
 
         .user-msg .content {
@@ -411,6 +412,7 @@
             padding: 12px 18px;
             border-radius: 20px 20px 4px 20px;
             word-wrap: break-word;
+            font-size: var(--text-size);
         }
 
         .bot-msg .content {
@@ -419,6 +421,7 @@
             padding: 4px 0;
             word-wrap: break-word;
             line-height: 1.7;
+            font-size: var(--text-size);
         }
 
         .bot-msg .content pre {
@@ -1609,6 +1612,40 @@
         </div>
 
         <div class="modal-section">
+            <div class="section-title">Voice & Audio</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; color: var(--text);">Voice Selector</span>
+                    <select id="voiceSelect" style="max-width: 180px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;">
+                        <option value="">Default Browser Voice</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+                    <span style="font-size: 13px; color: var(--text);">Auto-read responses</span>
+                    <input type="checkbox" id="voiceToggle" style="width: 18px; height: 18px; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <div class="section-title">Browser Features</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+                    <span style="font-size: 13px; color: var(--text);">Haptic Feedback</span>
+                    <input type="checkbox" id="hapticToggle" style="width: 18px; height: 18px; cursor: pointer;">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+                    <span style="font-size: 13px; color: var(--text);">Auto-scroll to bottom</span>
+                    <input type="checkbox" id="autoscrollToggle" checked style="width: 18px; height: 18px; cursor: pointer;">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+                    <span style="font-size: 13px; color: var(--text);">Browser Notifications</span>
+                    <button id="notifBtn" style="padding: 4px 10px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-size: 11px;">Enable</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-section">
             <div class="section-title">Response Quality</div>
             <div style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1687,31 +1724,63 @@
         </div>
 
         <div class="modal-section">
-            <div class="section-title">Sign in</div>
-            <div style="display:flex; flex-direction:column; gap: 10px;">
-                <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%; padding: 10px 12px; border-radius: 10px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); outline: none;" />
-                <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" style="width:100%; padding: 10px 12px; border-radius: 10px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); outline: none;" />
-                <div style="display:flex; gap: 10px;">
-                    <button id="signInBtn" style="flex:1; padding: 10px 12px; background: var(--accent); border: none; border-radius: 10px; color: var(--bg-body); cursor: pointer; font-size: 13px; font-weight: 600;">Sign in</button>
-                    <button id="signUpBtn" style="flex:1; padding: 10px 12px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600;">Create account</button>
+            <div id="authForm">
+                <div class="section-title">Sign in</div>
+                <div style="display:flex; flex-direction:column; gap: 10px;">
+                    <input id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%; padding: 10px 12px; border-radius: 10px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); outline: none;" />
+                    <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" style="width:100%; padding: 10px 12px; border-radius: 10px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); outline: none;" />
+                    <div style="display:flex; gap: 10px;">
+                        <button id="signInBtn" style="flex:1; padding: 10px 12px; background: var(--accent); border: none; border-radius: 10px; color: var(--bg-body); cursor: pointer; font-size: 13px; font-weight: 600;">Sign in</button>
+                        <button id="signUpBtn" style="flex:1; padding: 10px 12px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600;">Create account</button>
+                    </div>
                 </div>
-                <button id="signOutBtn" style="width:100%; padding: 10px 12px; background: transparent; border: 1px solid var(--danger); border-radius: 10px; color: var(--danger); cursor: pointer; font-size: 13px; font-weight: 600; display:none;">Sign out</button>
             </div>
+            <button id="signOutBtn" style="width:100%; padding: 10px 12px; background: transparent; border: 1px solid var(--danger); border-radius: 10px; color: var(--danger); cursor: pointer; font-size: 13px; font-weight: 600; display:none; margin-top: 10px;">Sign out</button>
             <div class="auth-status" id="authStatusText">Initializing Firebase...</div>
             <div style="font-size: 11px; color: var(--text-dim); margin-top: 10px;">If you don’t sign in, Hannah uses an anonymous session.</div>
         </div>
     </div>
 </div>
 
+<div class="modal" id="uploadModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Attach File</span>
+            <button class="modal-close" id="uploadCloseBtn">✕</button>
+        </div>
+
+        <div class="modal-section">
+            <div class="section-title">Choose Method</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button id="uploadLocalBtn" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 16px; color: var(--text); cursor: pointer; transition: all 0.2s ease;">
+                    <span class="material-symbols-outlined" style="font-size: 32px; color: var(--accent);">upload_file</span>
+                    <span style="font-size: 13px; font-weight: 500;">Local File</span>
+                </button>
+                <button id="uploadDriveBtn" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 16px; color: var(--text); cursor: pointer; transition: all 0.2s ease;">
+                    <span class="material-symbols-outlined" style="font-size: 32px; color: var(--success);">add_to_drive</span>
+                    <span style="font-size: 13px; font-weight: 500;">Drive Link</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="driveInputSection" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <div class="section-title">Google Drive Link</div>
+            <input type="text" id="driveUrlInput" placeholder="Paste sharing link here..." style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; margin-bottom: 12px;">
+            <button id="attachDriveBtn" style="width: 100%; padding: 12px; background: var(--accent); border: none; border-radius: 10px; color: var(--bg-body); font-weight: 600; cursor: pointer;">Attach Link</button>
+            <p style="font-size: 11px; color: var(--text-dim); margin-top: 8px; text-align: center;">Make sure the file is shared as "Anyone with the link can view".</p>
+        </div>
+    </div>
+</div>
+
 
 <!-- Markdown + optional code highlighting (safe fallback if CDN blocked) -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
 
 <!-- Firebase (compat build so this file can stay non-module) -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
     // ================================
@@ -1751,6 +1820,7 @@
     const statsModal = document.getElementById('statsModal');
     const settingsModal = document.getElementById('settingsModal');
     const accountModal = document.getElementById('accountModal');
+    const uploadModal = document.getElementById('uploadModal');
     const suggestionsContainer = document.getElementById('suggestionsContainer');
     const statChatCount = document.getElementById('statChatCount');
     const statMsgCount = document.getElementById('statMsgCount');
@@ -1783,11 +1853,15 @@
     let connectionRetries = 0;
     const MAX_RETRIES = 3;
     const responseCache = {}; // Cache for quick responses
+    const messageTexts = {}; // Store raw text for copy/regen actions
     const chats = {}; // { chatId: { title, messages, timestamp } }
     const recentPrompts = [];
     const MAX_ACTIVITY_ITEMS = 6;
     let lastUploadNote = 'No files yet';
     let voicePlayback = false;
+    let selectedVoiceURI = '';
+    let hapticEnabled = false;
+    let autoscrollEnabled = true;
     const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 
     // Firebase state
@@ -1848,14 +1922,20 @@
 
     function speakText(text) {
         if (!speechSupported || !text) return;
-        const normalized = text.replace(/\s+/g, ' ').trim().slice(0, 600);
+        const normalized = text.replace(/\s+/g, ' ').trim().slice(0, 1000);
         if (!normalized) return;
         try {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(normalized);
+            
+            if (selectedVoiceURI) {
+                const voices = window.speechSynthesis.getVoices();
+                const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
+                if (voice) utterance.voice = voice;
+            }
+
             utterance.rate = 1;
             utterance.pitch = 1;
-            utterance.lang = 'en-US';
             window.speechSynthesis.speak(utterance);
         } catch (err) {
             console.warn('Speech synthesis failed:', err);
@@ -1865,6 +1945,36 @@
     function maybeSpeakResponse(text) {
         if (!voicePlayback || !speechSupported) return;
         speakText(text);
+    }
+
+    function populateVoices() {
+        if (!speechSupported) return;
+        const voiceSelect = document.getElementById('voiceSelect');
+        if (!voiceSelect) return;
+
+        const voices = window.speechSynthesis.getVoices();
+        voiceSelect.innerHTML = '<option value="">Default Browser Voice</option>';
+        
+        voices.forEach(voice => {
+            const option = document.createElement('option');
+            option.value = voice.voiceURI;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            if (voice.voiceURI === selectedVoiceURI) {
+                option.selected = true;
+            }
+            voiceSelect.appendChild(option);
+        });
+    }
+
+    if (speechSupported) {
+        window.speechSynthesis.onvoiceschanged = populateVoices;
+        populateVoices();
+    }
+
+    function hapticFeedback() {
+        if (hapticEnabled && window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+        }
     }
 
     function showToast(message, type = 'info') {
@@ -1945,6 +2055,15 @@
         return !!(window.firebase && FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey);
     }
 
+    async function waitForFirebaseGlobal(timeoutMs = 8000) {
+        const start = Date.now();
+        while (!window.firebase) {
+            if (Date.now() - start > timeoutMs) return false;
+            await new Promise(r => setTimeout(r, 50));
+        }
+        return true;
+    }
+
     function getUserLabel(user) {
         if (!user) return 'Not signed in';
         if (user.email) return user.email;
@@ -1953,6 +2072,11 @@
     }
 
     async function initFirebase() {
+        // If scripts are still loading, wait briefly to avoid false "Firebase disabled"
+        if (!window.firebase) {
+            setAuthStatus('Loading Firebase...', 'offline');
+            await waitForFirebaseGlobal();
+        }
         if (!canUseFirebase()) {
             setAuthStatus('Firebase disabled', 'offline');
             return;
@@ -1968,6 +2092,17 @@
 
             firebaseAuth.onAuthStateChanged(async (user) => {
                 currentUser = user || null;
+
+                // Ensure we always have a session (guest by default)
+                if (!currentUser) {
+                    try {
+                        await firebaseAuth.signInAnonymously();
+                        currentUser = firebaseAuth.currentUser || null;
+                    } catch (err) {
+                        console.warn('Anon sign-in failed:', err);
+                    }
+                }
+
                 updateAccountUI();
 
                 // If the user changes (anon->email, sign out, etc.), reload chats.
@@ -2264,10 +2399,16 @@
             setupSuggestions();
         }
 
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        scrollToBottom();
 
         renderChatHistory();
         updateStats();
+    }
+
+    function scrollToBottom() {
+        if (autoscrollEnabled) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     }
 
     function updateChatTitle(text) {
@@ -2288,14 +2429,16 @@
 
     function normalizeMsg(input) {
         if (input && typeof input === 'object') {
+            let content = input.content ?? '';
+            if (typeof content !== 'string') content = String(content);
             return {
                 id: input.id || null,
                 role: input.role || null,
-                content: input.content ?? '',
+                content: content,
                 feedback: input.feedback || null
             };
         }
-        return { id: null, role: null, content: input ?? '', feedback: null };
+        return { id: null, role: null, content: String(input ?? ''), feedback: null };
     }
 
     function getChatMessages() {
@@ -2477,7 +2620,7 @@
             </div>
         `;
         chatContainer.appendChild(div);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        scrollToBottom();
 
         addUserActions(div.querySelector('.message-actions'), messageId);
 
@@ -2508,7 +2651,7 @@
             </div>
         `;
         chatContainer.appendChild(div);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        scrollToBottom();
 
         const contentDiv = div.querySelector('.content');
 
@@ -2524,7 +2667,7 @@
         const typeEffect = () => {
             if (index < content.length) {
                 contentDiv.innerHTML = renderPlainTextToHtml(content.slice(0, index + 1));
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                scrollToBottom();
                 index++;
                 setTimeout(typeEffect, 20); // 20ms per character
             } else {
@@ -2558,24 +2701,30 @@
     }
 
     function addMessageActions(container, text, messageId = '', feedback = null) {
-        const escapedText = escapeHtml(text).replace(/'/g, "\\'");
-        const safeId = escapeHtml(messageId || '').replace(/'/g, "\\'");
+        if (typeof text !== 'string') text = String(text || '');
+        if (!messageId) messageId = generateMessageId();
+        messageTexts[messageId] = text;
+
+        const safeId = escapeHtml(messageId).replace(/'/g, "\\'");
         const goodStyle = feedback === 'good' ? 'style="color: var(--success); border-color: var(--success);"' : '';
         const badStyle = feedback === 'bad' ? 'style="color: var(--danger); border-color: var(--danger);"' : '';
 
         container.innerHTML = `
             <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
-                <button class="action-btn" onclick="copyText(this, '${escapedText}', 'full')">
+                <button class="action-btn" onclick="copyText(this, '${safeId}', 'full')">
                     <span class="material-symbols-outlined">content_copy</span>
                     Copy
                 </button>
-                <button class="action-btn" onclick="copyText(this, '${escapedText}', 'code')" title="Copy code blocks only">
+                <button class="action-btn" onclick="copyText(this, '${safeId}', 'code')" title="Copy code blocks only">
                     <span class="material-symbols-outlined">code</span>
                     Code
                 </button>
                 <button class="action-btn" onclick="regenerate()">
                     <span class="material-symbols-outlined">refresh</span>
                     Regen
+                </button>
+                <button class="action-btn" onclick="speakTextById('${safeId}')" title="Read aloud">
+                    <span class="material-symbols-outlined">volume_up</span>
                 </button>
                 <button class="action-btn" ${goodStyle} onclick="feedbackMessage(this, 'good', '${safeId}')" title="Good response">
                     <span class="material-symbols-outlined">thumb_up</span>
@@ -2595,12 +2744,19 @@
         `;
     }
 
-    window.copyText = function(btn, text, mode = 'full') {
-        let decoded = text
+    window.speakTextById = function(id) {
+        const text = messageTexts[id];
+        if (text) speakText(text);
+    };
+
+    window.copyText = function(btn, idOrText, mode = 'full') {
+        let raw = messageTexts[idOrText] || idOrText;
+        let decoded = raw
             .replace(/&amp;/g, '&')
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')
             .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
             .replace(/&#39;/g, "'")
             .replace(/<br>/g, '\n');
 
@@ -2609,7 +2765,7 @@
             const codeBlocks = decoded.match(/```[\s\S]*?```/g) || [];
             if (codeBlocks.length > 0) {
                 decoded = codeBlocks
-                    .map(block => block.replace(/```/g, '').trim())
+                    .map(block => block.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim())
                     .join('\n\n');
                 if (!decoded) {
                     showToast('No code blocks found in response', 'info');
@@ -2810,6 +2966,7 @@
         document.getElementById('charCounter').textContent = '0 / 4000';
 
         addUserMessage(text);
+        hapticFeedback();
 
         const botDiv = document.createElement('div');
         botDiv.className = 'message bot-msg';
@@ -2829,7 +2986,7 @@
             </div>
         `;
         chatContainer.appendChild(botDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        scrollToBottom();
 
         const contentDiv = botDiv.querySelector('.content');
         const thinkingDiv = botDiv.querySelector('.thinking-indicator');
@@ -2838,7 +2995,7 @@
         const flushHiddenBuffer = () => {
             if (!hiddenBufferDirty) return;
             contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            scrollToBottom();
             hiddenBufferDirty = false;
         };
 
@@ -2932,7 +3089,7 @@
                 const typeEffect = () => {
                     if (index < fullResponse.length) {
                         contentDiv.innerHTML = renderPlainTextToHtml(fullResponse.slice(0, index + 1));
-                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        scrollToBottom();
                         index++;
                         setTimeout(typeEffect, 20);
                     } else {
@@ -2993,7 +3150,7 @@
                                 hiddenBufferDirty = true;
                             } else {
                                 contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                                scrollToBottom();
                             }
                         }
                     } catch {
@@ -3003,7 +3160,7 @@
                             hiddenBufferDirty = true;
                         } else {
                             contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                            scrollToBottom();
                         }
                     }
                 }
@@ -3254,30 +3411,17 @@
         document.getElementById('accountBtn').addEventListener('click', openModal(accountModal));
         document.getElementById('accountCloseBtn').addEventListener('click', closeModal(accountModal));
 
-        document.getElementById('statsBtn').addEventListener('click', openModal(statsModal));
-        document.getElementById('statsCloseBtn').addEventListener('click', closeModal(statsModal));
-
-        document.getElementById('settingsBtn').addEventListener('click', openModal(settingsModal));
-        document.getElementById('settingsCloseBtn').addEventListener('click', closeModal(settingsModal));
-
-        window.addEventListener('click', e => {
-            if (e.target === statsModal) closeModal(statsModal)();
-            if (e.target === settingsModal) closeModal(settingsModal)();
-            if (e.target === accountModal) closeModal(accountModal)();
-        });
-
-        // Account actions
-        const changeNameBtn = document.getElementById('changeNameBtn');
-        changeNameBtn?.addEventListener('click', () => {
-            const name = prompt('Your name:', userName);
-            if (name?.trim()) {
-                userName = name.trim();
-                localStorage.setItem('hannah_userName', userName);
-                userAvatar.textContent = userName.charAt(0).toUpperCase();
+        document.getElementById('changeNameBtn')?.addEventListener('click', () => {
+            const newName = prompt('Enter your name:', userName);
+            if (newName !== null) {
+                userName = newName.trim() || 'User';
+                localStorage.setItem('hannah_user_name', userName);
+                updateAccountUI();
                 showToast('Name updated', 'success');
             }
         });
 
+        // Auth actions
         const signInBtn = document.getElementById('signInBtn');
         const signUpBtn = document.getElementById('signUpBtn');
         const signOutBtn = document.getElementById('signOutBtn');
@@ -3285,26 +3429,30 @@
         const authPassword = document.getElementById('authPassword');
 
         signInBtn?.addEventListener('click', async () => {
-            if (!firebaseAuth) return showToast('Firebase not ready', 'error');
+            if (!firebaseReady || !firebaseAuth) return showToast('Firebase not ready', 'error');
             const email = (authEmail?.value || '').trim();
             const pass = (authPassword?.value || '').trim();
             if (!email || !pass) return showToast('Enter email + password', 'error');
             try {
                 await firebaseAuth.signInWithEmailAndPassword(email, pass);
                 showToast('Signed in', 'success');
+                if (authPassword) authPassword.value = '';
+                closeModal(accountModal)();
             } catch (e) {
                 showToast((e?.message || 'Sign-in failed').toString(), 'error');
             }
         });
 
         signUpBtn?.addEventListener('click', async () => {
-            if (!firebaseAuth) return showToast('Firebase not ready', 'error');
+            if (!firebaseReady || !firebaseAuth) return showToast('Firebase not ready', 'error');
             const email = (authEmail?.value || '').trim();
             const pass = (authPassword?.value || '').trim();
             if (!email || !pass) return showToast('Enter email + password', 'error');
             try {
                 await firebaseAuth.createUserWithEmailAndPassword(email, pass);
                 showToast('Account created', 'success');
+                if (authPassword) authPassword.value = '';
+                closeModal(accountModal)();
             } catch (e) {
                 showToast((e?.message || 'Sign-up failed').toString(), 'error');
             }
@@ -3314,72 +3462,122 @@
             if (!firebaseAuth) return;
             try {
                 await firebaseAuth.signOut();
-                showToast('Signed out', 'success');
-                // Return to anonymous session for continuity
-                await firebaseAuth.signInAnonymously();
-            } catch {
-                showToast('Sign-out failed', 'error');
+                if (authEmail) authEmail.value = '';
+                if (authPassword) authPassword.value = '';
+                showToast('Signed out', 'info');
+                // onAuthStateChanged will re-create anonymous session
+                closeModal(accountModal)();
+            } catch (e) {
+                showToast((e?.message || 'Sign-out failed').toString(), 'error');
             }
         });
 
-        document.getElementById('attachBtn').addEventListener('click', () => {
+        document.getElementById('statsBtn').addEventListener('click', openModal(statsModal));
+        document.getElementById('statsCloseBtn').addEventListener('click', closeModal(statsModal));
+
+        document.getElementById('settingsBtn').addEventListener('click', openModal(settingsModal));
+        document.getElementById('settingsCloseBtn').addEventListener('click', closeModal(settingsModal));
+
+        document.getElementById('uploadCloseBtn').addEventListener('click', closeModal(uploadModal));
+
+        window.addEventListener('click', e => {
+            if (e.target === statsModal) closeModal(statsModal)();
+            if (e.target === settingsModal) closeModal(settingsModal)();
+            if (e.target === accountModal) closeModal(accountModal)();
+            if (e.target === uploadModal) closeModal(uploadModal)();
+        });
+
+        // Upload Modal Logic
+        const uploadLocalBtn = document.getElementById('uploadLocalBtn');
+        const uploadDriveBtn = document.getElementById('uploadDriveBtn');
+        const driveInputSection = document.getElementById('driveInputSection');
+        const driveUrlInput = document.getElementById('driveUrlInput');
+        const attachDriveBtn = document.getElementById('attachDriveBtn');
+
+        uploadLocalBtn?.addEventListener('click', () => {
+            closeModal(uploadModal)();
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '*/*';
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                
-                if (file.size > 50 * 1024 * 1024) {
-                    showToast('File too large (max 50MB)', 'error');
-                    return;
-                }
-                
-                try {
-                    showToast(`Uploading ${file.name}...`, 'info');
-                    
-                    // Upload file to backend
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    const uploadResp = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!uploadResp.ok) {
-                        throw new Error('Upload failed');
-                    }
-                    
-                    const uploadData = await uploadResp.json();
-                    const fileUrl = uploadData.file_url || uploadData.filename;
-                    
-                    // Create message asking Hannah to analyze
-                    let message = `[File uploaded: ${file.name}]\n`;
-                    
-                    if (uploadData.preview) {
-                        message += `\n[File content preview]:\n---\n${uploadData.preview}\n---\n`;
-                    }
-                    
-                    message += `\nPlease analyze this file.`;
-                    
-                    userInput.value = message;
-                    autoResizeTextarea();
-                    userInput.focus();
-                    
-                    showToast(`File "${file.name}" uploaded! Ready to analyze.`, 'success');
-                    lastUploadNote = `${file.name} • ${new Date().toLocaleTimeString()}`;
-                    updateStats();
-                    
-                } catch (error) {
-                    showToast(`Upload failed: ${error.message}`, 'error');
-                }
+                handleFileUpload(file);
             };
             input.click();
         });
+
+        uploadDriveBtn?.addEventListener('click', () => {
+            if (!driveInputSection || !driveUrlInput) return;
+            driveInputSection.style.display = 'block';
+            driveUrlInput.focus();
+        });
+
+        attachDriveBtn?.addEventListener('click', () => {
+            const url = (driveUrlInput?.value || '').trim();
+            if (!url) return showToast('Please paste a link', 'error');
+            if (!url.includes('drive.google.com')) return showToast('Invalid Google Drive link', 'error');
+            
+            const message = `[File uploaded: ${url}]\n\nPlease analyze this Google Drive file.`;
+            userInput.value = message;
+            autoResizeTextarea();
+            closeModal(uploadModal)();
+            if (driveUrlInput) driveUrlInput.value = '';
+            if (driveInputSection) driveInputSection.style.display = 'none';
+            showToast('Google Drive link attached!', 'success');
+        });
+
+        document.getElementById('attachBtn').addEventListener('click', openModal(uploadModal));
+
+        async function handleFileUpload(file) {
+            if (file.size > 50 * 1024 * 1024) {
+                showToast('File too large (max 50MB)', 'error');
+                return;
+            }
+            
+            try {
+                showToast(`Uploading ${file.name}...`, 'info');
+                
+                // Upload file to backend
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const uploadResp = await fetch(`${API_BASE}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!uploadResp.ok) {
+                    throw new Error('Upload failed');
+                }
+                
+                const uploadData = await uploadResp.json();
+                const fileUrl = uploadData.file_url || uploadData.filename;
+                
+                // Create message asking Hannah to analyze
+                let message = `[File uploaded: ${fileUrl}]\n`;
+                
+                if (uploadData.preview) {
+                    message += `\n[File content preview]:\n---\n${uploadData.preview}\n---\n`;
+                }
+                
+                message += `\nPlease analyze this file.`;
+                
+                userInput.value = message;
+                autoResizeTextarea();
+                userInput.focus();
+                
+                showToast(`File "${file.name}" uploaded! Ready to analyze.`, 'success');
+                lastUploadNote = `${file.name} • ${new Date().toLocaleTimeString()}`;
+                updateStats();
+                
+            } catch (error) {
+                showToast(`Upload failed: ${error.message}`, 'error');
+            }
+        }
         
-        // Also support drag and drop
-        const chatArea = document.querySelector('.chat-messages') || document.body;
+        // Also support drag and drop (chat area only)
+        const chatArea = chatContainer || document.querySelector('.chat-area') || document.body;
         
         chatArea.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -3394,45 +3592,7 @@
             if (files.length === 0) return;
             
             for (const file of files) {
-                if (file.size > 50 * 1024 * 1024) {
-                    showToast(`${file.name} too large (max 50MB)`, 'error');
-                    continue;
-                }
-                
-                try {
-                    showToast(`Uploading ${file.name}...`, 'info');
-                    
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    const uploadResp = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!uploadResp.ok) {
-                        showToast(`${file.name} upload failed`, 'error');
-                        continue;
-                    }
-                    
-                    const uploadData = await uploadResp.json();
-                    
-                    let message = `[File uploaded: ${file.name}]\n`;
-                    if (uploadData.preview) {
-                        message += `\n[Preview]:\n---\n${uploadData.preview}\n---\n`;
-                    }
-                    message += `\nAnalyze this file.`;
-                    
-                    userInput.value = message;
-                    autoResizeTextarea();
-                    
-                    showToast(`${file.name} uploaded and ready!`, 'success');
-                    lastUploadNote = `${file.name} • ${new Date().toLocaleTimeString()}`;
-                    updateStats();
-                    
-                } catch (error) {
-                    showToast(`${file.name} error: ${error.message}`, 'error');
-                }
+                handleFileUpload(file);
             }
         });
 
@@ -3558,6 +3718,37 @@
             showToast(voicePlayback ? 'Voice responses enabled' : 'Voice responses muted', 'info');
         });
 
+        document.getElementById('voiceSelect')?.addEventListener('change', (e) => {
+            selectedVoiceURI = e.target.value;
+            saveSettings();
+            speakText('Voice updated');
+        });
+
+        document.getElementById('hapticToggle')?.addEventListener('change', (e) => {
+            hapticEnabled = e.target.checked;
+            saveSettings();
+            if (hapticEnabled) hapticFeedback();
+        });
+
+        document.getElementById('autoscrollToggle')?.addEventListener('change', (e) => {
+            autoscrollEnabled = e.target.checked;
+            saveSettings();
+        });
+
+        document.getElementById('notifBtn')?.addEventListener('click', async () => {
+            if (!("Notification" in window)) {
+                showToast('Notifications not supported', 'error');
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                new Notification('Hannah', { body: 'Notifications enabled!' });
+                showToast('Notifications enabled', 'success');
+            } else {
+                showToast('Permission denied', 'error');
+            }
+        });
+
         clearActivityBtn?.addEventListener('click', () => {
             recentPrompts.length = 0;
             renderActivityFeed();
@@ -3626,17 +3817,31 @@
         const identity = document.getElementById('accountIdentity');
         if (identity) identity.textContent = getUserLabel(currentUser);
 
+        const authForm = document.getElementById('authForm');
         const signOutBtn = document.getElementById('signOutBtn');
-        if (signOutBtn) {
-            signOutBtn.style.display = currentUser?.email ? 'block' : 'none';
+
+        if (currentUser?.email) {
+            if (authForm) authForm.style.display = 'none';
+            if (signOutBtn) signOutBtn.style.display = 'block';
+            if (userAvatar) userAvatar.textContent = currentUser.email.charAt(0).toUpperCase();
+            setAuthStatus('Cloud Sync Active', 'online');
+            return;
         }
 
-        const statusMessage = firebaseReady
-            ? currentUser?.email
-                ? 'Signed in via email'
-                : 'Anonymous session active'
-            : 'Firebase not ready';
-        setAuthStatus(statusMessage, firebaseReady ? 'online' : 'offline');
+        // Guest/anonymous
+        if (authForm) authForm.style.display = 'block';
+        if (signOutBtn) signOutBtn.style.display = 'none';
+        if (userAvatar) userAvatar.textContent = (userName || 'G').charAt(0).toUpperCase();
+
+        if (!firebaseReady) {
+            setAuthStatus('Firebase not ready', 'offline');
+        } else if (currentUser?.isAnonymous) {
+            setAuthStatus('Guest Mode', 'online');
+        } else if (!currentUser) {
+            setAuthStatus('Not signed in', 'offline');
+        } else {
+            setAuthStatus('Signed in', 'online');
+        }
     }
 
     function setupSuggestions() {
@@ -3646,63 +3851,6 @@
                 sendMessage(prompt);
             });
         });
-    }
-
-    function updateLiveStats() {
-        if (!statChatCount || !statMsgCount || !statLatestUpload) return;
-        const chatCount = Object.keys(chats).length;
-        const msgCount = Object.values(chats).reduce((total, chat) => {
-            if (!chat?.messages || !Array.isArray(chat.messages)) return total;
-            return total + chat.messages.length;
-        }, 0);
-        statChatCount.textContent = chatCount;
-        statMsgCount.textContent = msgCount;
-        statLatestUpload.textContent = lastUploadNote || 'No files yet';
-    }
-
-    function renderActivityFeed() {
-        if (!activityItems) return;
-        if (!recentPrompts.length) {
-            activityItems.innerHTML = '<div class="activity-placeholder">Send a message to fill this feed.</div>';
-            return;
-        }
-        activityItems.innerHTML = recentPrompts
-            .map(entry => `
-                <div class="activity-item">
-                    <span class="activity-time">${escapeHtml(entry.time)}</span>
-                    <p>${escapeHtml(entry.text)}</p>
-                </div>
-            `)
-            .join('');
-        activityItems.scrollTop = 0;
-    }
-
-    function recordActivity(prompt) {
-        if (!prompt) return;
-        const trimmed = prompt.trim();
-        if (!trimmed) return;
-        if (recentPrompts[0]?.text === trimmed) return;
-        recentPrompts.unshift({
-            text: trimmed,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        if (recentPrompts.length > MAX_ACTIVITY_ITEMS) {
-            recentPrompts.pop();
-        }
-        renderActivityFeed();
-    }
-
-    function clearActivityFeed() {
-        recentPrompts.length = 0;
-        renderActivityFeed();
-    }
-
-    function trackUploadActivity(fileName) {
-        if (!fileName) return;
-        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        lastUploadNote = `${fileName} • ${timestamp}`;
-        updateLiveStats();
-        recordActivity(`Uploaded ${fileName}`);
     }
 
     // ================================
@@ -3778,6 +3926,20 @@
             document.getElementById('fontSizeSelect').value = currentFontSize;
             applyFontSize(currentFontSize);
         }
+
+        const storedVoiceURI = localStorage.getItem('hannah_voiceURI');
+        if (storedVoiceURI) {
+            selectedVoiceURI = storedVoiceURI;
+            // We'll set the select value after voices are loaded
+        }
+
+        const storedHaptic = localStorage.getItem('hannah_haptic');
+        hapticEnabled = storedHaptic === 'true';
+        document.getElementById('hapticToggle').checked = hapticEnabled;
+
+        const storedAutoscroll = localStorage.getItem('hannah_autoscroll');
+        autoscrollEnabled = storedAutoscroll !== 'false'; // default true
+        document.getElementById('autoscrollToggle').checked = autoscrollEnabled;
     }
 
     function saveSettings() {
@@ -3791,6 +3953,9 @@
         localStorage.setItem('hannah_voice', voicePlayback);
         localStorage.setItem('hannah_theme', currentTheme);
         localStorage.setItem('hannah_fontSize', currentFontSize);
+        localStorage.setItem('hannah_voiceURI', selectedVoiceURI);
+        localStorage.setItem('hannah_haptic', hapticEnabled);
+        localStorage.setItem('hannah_autoscroll', autoscrollEnabled);
     }
 
     function applyTheme(theme) {
@@ -3825,7 +3990,6 @@
 
     function applyFontSize(size) {
         document.documentElement.style.setProperty('--text-size', size);
-        // We need to add this variable to our CSS
     }
 
     window.exportChat = function() {
