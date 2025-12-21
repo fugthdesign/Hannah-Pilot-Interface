@@ -25,11 +25,13 @@
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.15);
             --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
             --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+            --text-size: 15px;
         }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
         body {
             font-family: 'Google Sans Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: var(--text-size);
             background: var(--bg-body);
             color: var(--text);
             display: flex;
@@ -48,9 +50,15 @@
             flex-direction: column;
             padding: 12px;
             gap: 12px;
-            overflow: hidden;
+            overflow-y: auto;
             transition: width 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
         }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
 
         .sidebar-header {
             padding: 8px 12px;
@@ -153,6 +161,20 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .auth-status {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        .auth-status.online {
+            color: var(--success);
+        }
+
+        .auth-status.offline {
+            color: var(--danger);
         }
 
         .status-dot {
@@ -952,6 +974,45 @@
             font-size: 10px;
         }
 
+        .activity-items {
+            display: grid;
+            gap: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .activity-item {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .activity-item p {
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .activity-time {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .activity-placeholder {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-align: center;
+            padding: 16px;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+        }
+
         /* Response time badge */
         .response-time {
             font-size: 10px;
@@ -977,6 +1038,11 @@
 
         .feature-badge:hover {
             border-color: var(--accent);
+        }
+
+        .feature-badge.disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
         }
 
         .feature-badge.active {
@@ -1319,6 +1385,13 @@
         <span>New chat</span>
     </button>
 
+    <div class="search-box" style="padding: 0 4px; margin-bottom: 4px;">
+        <div style="position: relative; display: flex; align-items: center; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px;">
+            <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-dim);">search</span>
+            <input type="text" id="chatSearchInput" placeholder="Search chats..." style="background: transparent; border: none; color: var(--text); font-size: 13px; margin-left: 8px; outline: none; width: 100%;">
+        </div>
+    </div>
+
     <div class="sidebar-header">Recent chats</div>
     <div class="chat-list" id="chatList"></div>
 
@@ -1353,7 +1426,7 @@
         </button>
         <div class="brand-container">
             <span class="brand">Hannah</span>
-            <span class="version-badge">v1.0</span>
+            <span class="version-badge">v1.1</span>
         </div>
         <div class="connection-status" id="connectionStatus" title="Backend connection status">
             <span class="status-light connecting" id="statusLight"></span>
@@ -1370,7 +1443,7 @@
 
     <div class="chat-area" id="chatContainer">
         <div class="empty-state" id="emptyState">
-            <div class="empty-logo">Hannah 1.0</div>
+            <div class="empty-logo">Hannah 1.1</div>
             <h1 class="greeting">Hello there</h1>
             <p class="tagline">Your intelligent AI assistant</p>
             <div class="suggestions" id="suggestionsContainer">
@@ -1414,6 +1487,11 @@
                 <span class="material-symbols-outlined" style="font-size: 16px;">auto_awesome</span>
                 <span>Creative</span>
                 <input type="checkbox" id="creativeToggle">
+            </label>
+            <label class="feature-badge" id="voiceBadge" title="Read responses aloud">
+                <span class="material-symbols-outlined" style="font-size: 16px;">volume_up</span>
+                <span>Voice</span>
+                <input type="checkbox" id="voiceToggle">
             </label>
         </div>
         <div class="input-box">
@@ -1466,8 +1544,35 @@
 <div class="modal" id="settingsModal">
     <div class="modal-content">
         <div class="modal-header">
-            <span class="modal-title">Settings</span>
+            <span class="modal-title">Settings & Insights</span>
             <button class="modal-close" id="settingsCloseBtn">✕</button>
+        </div>
+
+        <div class="modal-section">
+            <div class="section-title">Usage Insights</div>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+                <div class="stat-card" style="background: var(--bg-input); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--border);">
+                    <span style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">Total chats</span>
+                    <strong id="statChatCount" style="font-size: 18px; color: var(--accent);">0</strong>
+                </div>
+                <div class="stat-card" style="background: var(--bg-input); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--border);">
+                    <span style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">Messages</span>
+                    <strong id="statMsgCount" style="font-size: 18px; color: var(--success);">0</strong>
+                </div>
+                <div class="stat-card" style="background: var(--bg-input); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--border);">
+                    <span style="font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px;">Last upload</span>
+                    <strong id="statLatestUpload" style="font-size: 11px; color: var(--warning); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">No files</strong>
+                </div>
+            </div>
+            <div class="activity-feed" style="background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border); overflow: hidden;">
+                <div class="activity-header" style="padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; font-weight: 600; color: var(--text-dim);">Recent prompts</span>
+                    <button class="activity-clear-btn" id="clearActivityBtn" type="button" style="background: transparent; border: none; color: var(--danger); font-size: 11px; cursor: pointer;">Clear</button>
+                </div>
+                <div class="activity-items" id="activityItems" style="max-height: 120px; overflow-y: auto; padding: 8px;">
+                    <div class="activity-placeholder" style="font-size: 12px; color: var(--text-dim); text-align: center; padding: 10px;">Send a message to fill this feed.</div>
+                </div>
+            </div>
         </div>
 
         <div class="modal-section">
@@ -1482,17 +1587,49 @@
         </div>
 
         <div class="modal-section">
+            <div class="section-title">Appearance</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; color: var(--text);">Theme</span>
+                    <select id="themeSelect" style="background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;">
+                        <option value="dark">Dark (Default)</option>
+                        <option value="light">Light</option>
+                        <option value="oled">OLED Black</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; color: var(--text);">Font Size</span>
+                    <select id="fontSizeSelect" style="background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;">
+                        <option value="13px">Small</option>
+                        <option value="15px" selected>Medium</option>
+                        <option value="17px">Large</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-section">
             <div class="section-title">Response Quality</div>
             <div style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-size: 13px; color: var(--text);">Creativity</span>
+                    <span style="font-size: 13px; color: var(--text);">Creativity (Temperature)</span>
                     <span style="font-size: 12px; color: var(--accent); font-weight: 500;" id="tempDisplay">0.7</span>
                 </div>
                 <input type="range" id="tempSlider" min="0" max="2" step="0.1" value="0.7" style="width: 100%; cursor: pointer;">
-                <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px; display: flex; justify-content: space-between;">
-                    <span>Focused</span>
-                    <span>Creative</span>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 13px; color: var(--text);">Diversity (Top-P)</span>
+                    <span style="font-size: 12px; color: var(--success); font-weight: 500;" id="topPDisplay">0.9</span>
                 </div>
+                <input type="range" id="topPSlider" min="0" max="1" step="0.05" value="0.9" style="width: 100%; cursor: pointer;">
+            </div>
+            <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 13px; color: var(--text);">Max Length</span>
+                    <span style="font-size: 12px; color: var(--warning); font-weight: 500;" id="maxTokensDisplay">2048</span>
+                </div>
+                <input type="range" id="maxTokensSlider" min="256" max="8192" step="256" value="2048" style="width: 100%; cursor: pointer;">
             </div>
         </div>
 
@@ -1560,6 +1697,7 @@
                 </div>
                 <button id="signOutBtn" style="width:100%; padding: 10px 12px; background: transparent; border: 1px solid var(--danger); border-radius: 10px; color: var(--danger); cursor: pointer; font-size: 13px; font-weight: 600; display:none;">Sign out</button>
             </div>
+            <div class="auth-status" id="authStatusText">Initializing Firebase...</div>
             <div style="font-size: 11px; color: var(--text-dim); margin-top: 10px;">If you don’t sign in, Hannah uses an anonymous session.</div>
         </div>
     </div>
@@ -1614,6 +1752,14 @@
     const settingsModal = document.getElementById('settingsModal');
     const accountModal = document.getElementById('accountModal');
     const suggestionsContainer = document.getElementById('suggestionsContainer');
+    const statChatCount = document.getElementById('statChatCount');
+    const statMsgCount = document.getElementById('statMsgCount');
+    const statLatestUpload = document.getElementById('statLatestUpload');
+    const activityItems = document.getElementById('activityItems');
+    const clearActivityBtn = document.getElementById('clearActivityBtn');
+    const authStatusText = document.getElementById('authStatusText');
+    const voiceToggle = document.getElementById('voiceToggle');
+    const voiceBadge = document.getElementById('voiceBadge');
 
     // ================================
     // STATE
@@ -1624,16 +1770,25 @@
     let userName = 'User';
     let currentChatId = null;
     let temperature = 0.7;
+    let topP = 0.9;
+    let maxTokens = 2048;
     let deepThink = false;
     let internetMode = false;
     let memoryCache = true;
     let creativeMode = false;
+    let currentTheme = 'dark';
+    let currentFontSize = '15px';
     let displayMode = 'canvas'; // 'canvas' or 'text' - for formatted vs plain text
     let isConnected = false;
     let connectionRetries = 0;
     const MAX_RETRIES = 3;
     const responseCache = {}; // Cache for quick responses
     const chats = {}; // { chatId: { title, messages, timestamp } }
+    const recentPrompts = [];
+    const MAX_ACTIVITY_ITEMS = 6;
+    let lastUploadNote = 'No files yet';
+    let voicePlayback = false;
+    const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 
     // Firebase state
     let firebaseReady = false;
@@ -1680,6 +1835,36 @@
         if (settingsStatusText) settingsStatusText.textContent = statusMessages[status];
         
         isConnected = status === 'connected';
+    }
+
+    function setAuthStatus(message, variant = '') {
+        if (!authStatusText) return;
+        authStatusText.textContent = message;
+        authStatusText.classList.remove('online', 'offline');
+        if (variant) {
+            authStatusText.classList.add(variant);
+        }
+    }
+
+    function speakText(text) {
+        if (!speechSupported || !text) return;
+        const normalized = text.replace(/\s+/g, ' ').trim().slice(0, 600);
+        if (!normalized) return;
+        try {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(normalized);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
+        } catch (err) {
+            console.warn('Speech synthesis failed:', err);
+        }
+    }
+
+    function maybeSpeakResponse(text) {
+        if (!voicePlayback || !speechSupported) return;
+        speakText(text);
     }
 
     function showToast(message, type = 'info') {
@@ -1750,6 +1935,9 @@
 
         if (!currentChatId) newChat();
 
+        renderActivityFeed();
+        updateStats();
+
         checkConnection().then(() => loadSystem());
     }
 
@@ -1765,7 +1953,11 @@
     }
 
     async function initFirebase() {
-        if (!canUseFirebase()) return;
+        if (!canUseFirebase()) {
+            setAuthStatus('Firebase disabled', 'offline');
+            return;
+        }
+        setAuthStatus('Initializing Firebase...', 'offline');
         try {
             if (!firebase.apps?.length) firebase.initializeApp(FIREBASE_CONFIG);
             firebaseAuth = firebase.auth();
@@ -1792,9 +1984,11 @@
 
             // Mark as ready after setup completes
             firebaseReady = true;
+            setAuthStatus('Firebase ready', 'online');
         } catch (err) {
             console.warn('Firebase init failed:', err);
             firebaseReady = false;
+            setAuthStatus('Firebase unavailable', 'offline');
         }
     }
 
@@ -1811,6 +2005,11 @@
     // ================================
     function saveChats() {
         localStorage.setItem('hannah_chats', JSON.stringify(chats));
+        if (currentChatId) {
+            localStorage.setItem('hannah_currentChatId', currentChatId);
+        } else {
+            localStorage.removeItem('hannah_currentChatId');
+        }
 
         // Best-effort cloud sync (debounced)
         if (firebaseReady && firestoreDb && currentUser?.uid) {
@@ -1819,6 +2018,7 @@
                 syncChatsToFirestore().catch(() => { /* ignore */ });
             }, 800);
         }
+        updateStats();
     }
 
     function loadChatsLocal() {
@@ -1842,8 +2042,70 @@
             }
         }
         if (changed) saveChats();
+        if (restoreCurrentChatFromStorage()) {
+            return;
+        }
+
+        const sortedChats = Object.entries(chats)
+            .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+        if (sortedChats.length) {
+            currentChatId = sortedChats[0][0];
+            loadChat(currentChatId);
+            return;
+        }
 
         renderChatHistory();
+    }
+
+    function restoreCurrentChatFromStorage() {
+        const stored = localStorage.getItem('hannah_currentChatId');
+        if (stored && chats[stored]) {
+            loadChat(stored);
+            return true;
+        }
+        return false;
+    }
+
+    function updateStats() {
+        if (statChatCount) {
+            statChatCount.textContent = Object.keys(chats).length.toString();
+        }
+        if (statMsgCount) {
+            const totalMessages = Object.values(chats).reduce((sum, chat) => {
+                return sum + (Array.isArray(chat?.messages) ? chat.messages.length : 0);
+            }, 0);
+            statMsgCount.textContent = totalMessages.toString();
+        }
+        if (statLatestUpload) {
+            statLatestUpload.textContent = lastUploadNote || 'No files yet';
+        }
+    }
+
+    function renderActivityFeed() {
+        if (!activityItems) return;
+        if (!recentPrompts.length) {
+            activityItems.innerHTML = '<div class="activity-placeholder">Send a message to fill this feed.</div>';
+            return;
+        }
+        activityItems.innerHTML = recentPrompts.map(item => {
+            const timeLabel = new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="activity-item">
+                    <p>${escapeHtml(item.text)}</p>
+                    <span class="activity-time">${timeLabel}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function pushRecentPrompt(text) {
+        if (!text) return;
+        recentPrompts.unshift({ text: text.trim(), time: Date.now() });
+        if (recentPrompts.length > MAX_ACTIVITY_ITEMS) {
+            recentPrompts.pop();
+        }
+        renderActivityFeed();
     }
 
     async function loadChatsPreferCloud(force = false) {
@@ -1896,8 +2158,10 @@
             if (first?.[0]) {
                 currentChatId = first[0];
                 loadChat(currentChatId);
+                localStorage.setItem('hannah_currentChatId', currentChatId);
             }
 
+            updateStats();
             return true;
         } catch (err) {
             console.warn('Firestore load failed:', err);
@@ -1933,11 +2197,21 @@
 
     function renderChatHistory() {
         chatList.innerHTML = '';
+        const searchTerm = (document.getElementById('chatSearchInput')?.value || '').toLowerCase();
+
         const sorted = Object.entries(chats)
             .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0))
-            .slice(0, 15);
+            .filter(([id, chat]) => {
+                if (!searchTerm) return true;
+                return (chat.title || '').toLowerCase().includes(searchTerm);
+            });
 
-        sorted.forEach(([id, chat]) => {
+        if (sorted.length === 0 && searchTerm) {
+            chatList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-dim); font-size: 12px;">No chats found</div>';
+            return;
+        }
+
+        sorted.slice(0, 50).forEach(([id, chat]) => {
             const item = document.createElement('div');
             item.className = `chat-item ${id === currentChatId ? 'active' : ''}`;
             item.textContent = chat.title || 'Untitled';
@@ -1969,6 +2243,7 @@
 
     function loadChat(chatId) {
         currentChatId = chatId;
+        localStorage.setItem('hannah_currentChatId', chatId);
         const chat = chats[chatId];
         if (!chat) return;
 
@@ -1989,7 +2264,10 @@
             setupSuggestions();
         }
 
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
         renderChatHistory();
+        updateStats();
     }
 
     function updateChatTitle(text) {
@@ -2262,6 +2540,7 @@
                     }
                 }
                 addMessageActions(div.querySelector('.message-actions'), content, messageId, null);
+                    if (save) maybeSpeakResponse(content);
             }
         };
         
@@ -2481,6 +2760,10 @@
         const text = (prompt || userInput.value).trim();
         const model = modelSelect.value;
 
+        if (text) {
+            pushRecentPrompt(text);
+        }
+
         if (!text || !text.length) {
             showToast('Please enter a message', 'error');
             return;
@@ -2587,6 +2870,8 @@
                     model: model,
                     history: conversation,
                     temperature: temperature,
+                    top_p: topP,
+                    max_tokens: maxTokens,
                     deepThink: deepThink,
                     internet: internetMode
                 }),
@@ -2633,6 +2918,7 @@
                     botDiv.querySelector('.message-content').appendChild(timeDiv);
 
                     addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
+                    maybeSpeakResponse(fullResponse);
                     saveToCache(text, model, fullResponse);
                     conversation.push({ role: 'assistant', content: fullResponse });
                     if (chats[currentChatId]) {
@@ -2659,6 +2945,7 @@
                         botDiv.querySelector('.message-content').appendChild(timeDiv);
                         
                         addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
+                        maybeSpeakResponse(fullResponse);
                         saveToCache(text, model, fullResponse);
                         conversation.push({ role: 'assistant', content: fullResponse });
                         if (chats[currentChatId]) {
@@ -2755,6 +3042,7 @@
             botDiv.querySelector('.message-content').appendChild(timeDiv);
             
             addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
+            maybeSpeakResponse(fullResponse);
 
             document.removeEventListener('visibilitychange', onVisibility);
 
@@ -2884,7 +3172,7 @@
             showToast('Connected to Hannah AI', 'success');
         } catch (err) {
             console.error('Failed to load system:', err);
-            modelSelect.innerHTML = '<option value="qwen2.5-0.5b-instruct-q4_k_m.gguf">Hannah-1.0 Heavy</option><option value="qwen2.5-0.5b-instruct-q2_k.gguf">Hannah-1.0 Light</option>';
+            modelSelect.innerHTML = '<option value="qwen2.5-0.5b-instruct-q4_k_m.gguf">Hannah-1.1 Heavy</option><option value="qwen2.5-0.5b-instruct-q2_k.gguf">Hannah-1.1 Light</option>';
             updateConnectionStatus('disconnected');
         }
     }
@@ -3080,6 +3368,8 @@
                     userInput.focus();
                     
                     showToast(`File "${file.name}" uploaded! Ready to analyze.`, 'success');
+                    lastUploadNote = `${file.name} • ${new Date().toLocaleTimeString()}`;
+                    updateStats();
                     
                 } catch (error) {
                     showToast(`Upload failed: ${error.message}`, 'error');
@@ -3137,6 +3427,8 @@
                     autoResizeTextarea();
                     
                     showToast(`${file.name} uploaded and ready!`, 'success');
+                    lastUploadNote = `${file.name} • ${new Date().toLocaleTimeString()}`;
+                    updateStats();
                     
                 } catch (error) {
                     showToast(`${file.name} error: ${error.message}`, 'error');
@@ -3150,6 +3442,41 @@
         tempSlider.addEventListener('input', (e) => {
             temperature = parseFloat(e.target.value);
             tempDisplay.textContent = temperature.toFixed(1);
+            saveSettings();
+        });
+
+        // Top-P slider
+        const topPSlider = document.getElementById('topPSlider');
+        const topPDisplay = document.getElementById('topPDisplay');
+        topPSlider?.addEventListener('input', (e) => {
+            topP = parseFloat(e.target.value);
+            topPDisplay.textContent = topP.toFixed(2);
+            saveSettings();
+        });
+
+        // Max Tokens slider
+        const maxTokensSlider = document.getElementById('maxTokensSlider');
+        const maxTokensDisplay = document.getElementById('maxTokensDisplay');
+        maxTokensSlider?.addEventListener('input', (e) => {
+            maxTokens = parseInt(e.target.value);
+            maxTokensDisplay.textContent = maxTokens;
+            saveSettings();
+        });
+
+        // Theme select
+        const themeSelect = document.getElementById('themeSelect');
+        themeSelect?.addEventListener('change', (e) => {
+            currentTheme = e.target.value;
+            applyTheme(currentTheme);
+            saveSettings();
+            showToast(`Theme switched to ${currentTheme}`, 'info');
+        });
+
+        // Font size select
+        const fontSizeSelect = document.getElementById('fontSizeSelect');
+        fontSizeSelect?.addEventListener('change', (e) => {
+            currentFontSize = e.target.value;
+            applyFontSize(currentFontSize);
             saveSettings();
         });
 
@@ -3219,6 +3546,24 @@
             document.getElementById('internetBadge').classList.toggle('active', this.checked);
         });
 
+        voiceToggle?.addEventListener('change', (e) => {
+            if (e.target.checked && !speechSupported) {
+                showToast('Text-to-speech is not supported in this browser.', 'error');
+                e.target.checked = false;
+                return;
+            }
+            voicePlayback = e.target.checked;
+            voiceBadge?.classList.toggle('active', voicePlayback);
+            saveSettings();
+            showToast(voicePlayback ? 'Voice responses enabled' : 'Voice responses muted', 'info');
+        });
+
+        clearActivityBtn?.addEventListener('click', () => {
+            recentPrompts.length = 0;
+            renderActivityFeed();
+            showToast('Recent prompts cleared', 'info');
+        });
+
         // Character counter
         userInput.addEventListener('input', () => {
             const len = userInput.value.length;
@@ -3227,6 +3572,11 @@
             counter.className = 'char-counter';
             if (len > 3500) counter.classList.add('danger');
             else if (len > 3000) counter.classList.add('warning');
+        });
+
+        // Chat search
+        document.getElementById('chatSearchInput')?.addEventListener('input', () => {
+            renderChatHistory();
         });
 
         // Mic button - voice input
@@ -3280,6 +3630,13 @@
         if (signOutBtn) {
             signOutBtn.style.display = currentUser?.email ? 'block' : 'none';
         }
+
+        const statusMessage = firebaseReady
+            ? currentUser?.email
+                ? 'Signed in via email'
+                : 'Anonymous session active'
+            : 'Firebase not ready';
+        setAuthStatus(statusMessage, firebaseReady ? 'online' : 'offline');
     }
 
     function setupSuggestions() {
@@ -3291,6 +3648,63 @@
         });
     }
 
+    function updateLiveStats() {
+        if (!statChatCount || !statMsgCount || !statLatestUpload) return;
+        const chatCount = Object.keys(chats).length;
+        const msgCount = Object.values(chats).reduce((total, chat) => {
+            if (!chat?.messages || !Array.isArray(chat.messages)) return total;
+            return total + chat.messages.length;
+        }, 0);
+        statChatCount.textContent = chatCount;
+        statMsgCount.textContent = msgCount;
+        statLatestUpload.textContent = lastUploadNote || 'No files yet';
+    }
+
+    function renderActivityFeed() {
+        if (!activityItems) return;
+        if (!recentPrompts.length) {
+            activityItems.innerHTML = '<div class="activity-placeholder">Send a message to fill this feed.</div>';
+            return;
+        }
+        activityItems.innerHTML = recentPrompts
+            .map(entry => `
+                <div class="activity-item">
+                    <span class="activity-time">${escapeHtml(entry.time)}</span>
+                    <p>${escapeHtml(entry.text)}</p>
+                </div>
+            `)
+            .join('');
+        activityItems.scrollTop = 0;
+    }
+
+    function recordActivity(prompt) {
+        if (!prompt) return;
+        const trimmed = prompt.trim();
+        if (!trimmed) return;
+        if (recentPrompts[0]?.text === trimmed) return;
+        recentPrompts.unshift({
+            text: trimmed,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        if (recentPrompts.length > MAX_ACTIVITY_ITEMS) {
+            recentPrompts.pop();
+        }
+        renderActivityFeed();
+    }
+
+    function clearActivityFeed() {
+        recentPrompts.length = 0;
+        renderActivityFeed();
+    }
+
+    function trackUploadActivity(fileName) {
+        if (!fileName) return;
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        lastUploadNote = `${fileName} • ${timestamp}`;
+        updateLiveStats();
+        recordActivity(`Uploaded ${fileName}`);
+    }
+
     // ================================
     // SETTINGS
     // ================================
@@ -3300,6 +3714,20 @@
             temperature = parseFloat(storedTemp);
             document.getElementById('tempSlider').value = temperature;
             document.getElementById('tempDisplay').textContent = temperature.toFixed(1);
+        }
+
+        const storedTopP = localStorage.getItem('hannah_topP');
+        if (storedTopP) {
+            topP = parseFloat(storedTopP);
+            document.getElementById('topPSlider').value = topP;
+            document.getElementById('topPDisplay').textContent = topP.toFixed(2);
+        }
+
+        const storedMaxTokens = localStorage.getItem('hannah_maxTokens');
+        if (storedMaxTokens) {
+            maxTokens = parseInt(storedMaxTokens);
+            document.getElementById('maxTokensSlider').value = maxTokens;
+            document.getElementById('maxTokensDisplay').textContent = maxTokens;
         }
         
         const storedDeepThink = localStorage.getItem('hannah_deepThink');
@@ -3322,14 +3750,82 @@
         creativeMode = storedCreative === 'true';
         document.getElementById('creativeToggle').checked = creativeMode;
         if (creativeMode) document.getElementById('creativeBadge').classList.add('active');
+
+        const storedVoice = localStorage.getItem('hannah_voice');
+        voicePlayback = storedVoice === 'true';
+        if (voiceToggle) {
+            voiceToggle.checked = voicePlayback && speechSupported;
+            if (!speechSupported) {
+                voiceToggle.checked = false;
+                voiceToggle.disabled = true;
+                voiceBadge?.classList.add('disabled');
+            }
+        }
+        if (voicePlayback && speechSupported) {
+            voiceBadge?.classList.add('active');
+        }
+
+        const storedTheme = localStorage.getItem('hannah_theme');
+        if (storedTheme) {
+            currentTheme = storedTheme;
+            document.getElementById('themeSelect').value = currentTheme;
+            applyTheme(currentTheme);
+        }
+
+        const storedFontSize = localStorage.getItem('hannah_fontSize');
+        if (storedFontSize) {
+            currentFontSize = storedFontSize;
+            document.getElementById('fontSizeSelect').value = currentFontSize;
+            applyFontSize(currentFontSize);
+        }
     }
 
     function saveSettings() {
         localStorage.setItem('hannah_temperature', temperature);
+        localStorage.setItem('hannah_topP', topP);
+        localStorage.setItem('hannah_maxTokens', maxTokens);
         localStorage.setItem('hannah_deepThink', deepThink);
         localStorage.setItem('hannah_internet', internetMode);
         localStorage.setItem('hannah_memoryCache', memoryCache);
         localStorage.setItem('hannah_creative', creativeMode);
+        localStorage.setItem('hannah_voice', voicePlayback);
+        localStorage.setItem('hannah_theme', currentTheme);
+        localStorage.setItem('hannah_fontSize', currentFontSize);
+    }
+
+    function applyTheme(theme) {
+        const root = document.documentElement;
+        if (theme === 'light') {
+            root.style.setProperty('--bg-body', '#ffffff');
+            root.style.setProperty('--bg-sidebar', '#f8f9fa');
+            root.style.setProperty('--bg-input', '#f1f3f4');
+            root.style.setProperty('--bg-hover', '#e8eaed');
+            root.style.setProperty('--text', '#202124');
+            root.style.setProperty('--text-dim', '#5f6368');
+            root.style.setProperty('--border', '#dadce0');
+        } else if (theme === 'oled') {
+            root.style.setProperty('--bg-body', '#000000');
+            root.style.setProperty('--bg-sidebar', '#000000');
+            root.style.setProperty('--bg-input', '#121212');
+            root.style.setProperty('--bg-hover', '#1a1a1a');
+            root.style.setProperty('--text', '#ffffff');
+            root.style.setProperty('--text-dim', '#888888');
+            root.style.setProperty('--border', '#222222');
+        } else {
+            // Default Dark
+            root.style.setProperty('--bg-body', '#1a1a1d');
+            root.style.setProperty('--bg-sidebar', '#202124');
+            root.style.setProperty('--bg-input', '#282a2c');
+            root.style.setProperty('--bg-hover', '#2d2e30');
+            root.style.setProperty('--text', '#e8eaed');
+            root.style.setProperty('--text-dim', '#9aa0a6');
+            root.style.setProperty('--border', '#3c4043');
+        }
+    }
+
+    function applyFontSize(size) {
+        document.documentElement.style.setProperty('--text-size', size);
+        // We need to add this variable to our CSS
     }
 
     window.exportChat = function() {
