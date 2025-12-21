@@ -57,6 +57,165 @@
         }
 
         .sidebar::-webkit-scrollbar { width: 4px; }
+
+        .try-pro-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .try-pro-btn:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+            transform: translateY(-1px);
+        }
+
+        .try-pro-btn .material-symbols-outlined {
+            font-size: 18px;
+            color: var(--warning);
+        }
+
+        /* Sidebar collapse (desktop + mobile) */
+        .sidebar-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        body.sidebar-collapsed .sidebar {
+            width: 0;
+            padding: 0;
+            border-right: none;
+            overflow: visible; /* allow the collapse button (fixed) to remain clickable */
+        }
+
+        body.sidebar-collapsed .sidebar * {
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* Keep the collapse button visible so you can re-open the sidebar */
+        body.sidebar-collapsed #sidebarCollapseBtn {
+            position: fixed;
+            left: 14px;
+            top: 14px;
+            z-index: 5000;
+            pointer-events: auto;
+            opacity: 1;
+            background: var(--bg-sidebar);
+            border-color: var(--border);
+        }
+
+        body.sidebar-collapsed #sidebarCollapseBtn * {
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        /* Chat item actions */
+        .chat-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .chat-item-title {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-item-menu {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.15s ease;
+        }
+
+        .chat-item:hover .chat-item-menu {
+            opacity: 1;
+        }
+
+        .chat-item-menu:hover {
+            background: var(--bg-hover);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        .chat-item-menu .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        .context-menu {
+            position: fixed;
+            z-index: 9999;
+            min-width: 160px;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            padding: 6px;
+        }
+
+        .context-menu button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 10px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .context-menu button:hover {
+            background: var(--bg-hover);
+        }
+
+        .context-menu .danger {
+            color: var(--danger);
+        }
+
+        .context-menu .material-symbols-outlined {
+            font-size: 18px;
+        }
         .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
         .sidebar::-webkit-scrollbar-track { background: transparent; }
 
@@ -1383,6 +1542,13 @@
 
 <!-- ========== SIDEBAR ========== -->
 <aside class="sidebar">
+    <div style="display:flex; align-items:center; justify-content: space-between; gap: 10px; padding: 0 4px;">
+        <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" title="Collapse sidebar">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div style="flex:1;"></div>
+    </div>
+
     <button class="new-chat-btn" id="newChatBtn">
         <span class="material-symbols-outlined">add</span>
         <span>New chat</span>
@@ -1441,6 +1607,10 @@
                 <option disabled selected>Loading...</option>
             </select>
         </div>
+        <button class="try-pro-btn" id="tryProBtn" title="Try Pro (Free Trial)">
+            <span class="material-symbols-outlined">stars</span>
+            Try Pro
+        </button>
         <div class="avatar" id="userAvatar" title="Click to change name">Y</div>
     </header>
 
@@ -1614,6 +1784,11 @@
         <div class="modal-section">
             <div class="section-title">Voice & Audio</div>
             <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 13px; color: var(--text);">Reading speed</span>
+                            <span style="font-size: 12px; color: var(--text-dim);" id="speechRateDisplay">1.0×</span>
+                        </div>
+                        <input type="range" id="speechRateSlider" min="0.5" max="2" step="0.1" value="1" style="width: 100%; cursor: pointer;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-size: 13px; color: var(--text);">Voice Selector</span>
                     <select id="voiceSelect" style="max-width: 180px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;">
@@ -1626,6 +1801,17 @@
                 </div>
             </div>
         </div>
+
+                <div class="modal-section">
+                    <div class="section-title">Custom AI Prompt</div>
+                    <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px;">
+                        Saved per account (syncs when signed in). Use this for personality, emotions, and rules.
+                    </div>
+                    <textarea id="systemPromptInput" rows="4" placeholder="Example: You are Hannah. Be warm, concise, and proactive. Use a friendly tone and show empathy." style="width: 100%; resize: vertical; min-height: 90px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 13px; outline: none;"></textarea>
+                    <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;">
+                        Tip: For “emotions”, describe the vibe you want (calm, cheerful, supportive).
+                    </div>
+                </div>
 
         <div class="modal-section">
             <div class="section-title">Browser Features</div>
@@ -1772,6 +1958,50 @@
     </div>
 </div>
 
+<div class="modal" id="proModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" id="proModalTitle">Try Hannah Pro</span>
+            <button class="modal-close" id="proCloseBtn">✕</button>
+        </div>
+
+        <div class="modal-section">
+            <div class="section-title">Pro benefits</div>
+            <div style="display:flex; flex-direction:column; gap: 8px; font-size: 12px; color: var(--text-dim);">
+                <div>• Solve complex problems</div>
+                <div>• Have long chats over multiple sessions</div>
+                <div>• Create more images, faster</div>
+                <div>• Remember goals and past conversations</div>
+                <div>• Plan travel and tasks with agent mode</div>
+                <div>• Organize projects and customize GPTs</div>
+                <div>• Produce and share videos on Sora</div>
+                <div>• Write code and build apps with Codex</div>
+            </div>
+        </div>
+
+        <div class="modal-section" id="proGetSection">
+            <div class="section-title">Get Pro</div>
+            <div style="display:flex; flex-direction:column; gap: 10px;">
+                <button id="startTrialBtn" style="width:100%; padding: 10px 12px; background: var(--accent); border: none; border-radius: 10px; color: var(--bg-body); cursor: pointer; font-size: 13px; font-weight: 700;">
+                    Start 7‑day free trial
+                </button>
+                <button id="subscribeBtn" style="width:100%; padding: 10px 12px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600;">
+                    Subscribe
+                </button>
+                <div style="font-size: 11px; color: var(--text-dim);" id="proStatusText">Pro is not active.</div>
+            </div>
+        </div>
+
+        <div class="modal-section" id="proRedeemSection">
+            <div class="section-title">Redeem code</div>
+            <div style="display:flex; gap: 10px;">
+                <input id="proRedeemInput" type="text" placeholder="Enter code" style="flex:1; padding: 10px 12px; border-radius: 10px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); outline: none;" />
+                <button id="proRedeemBtn" style="padding: 10px 12px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600;">Redeem</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- Markdown + optional code highlighting (safe fallback if CDN blocked) -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -1805,6 +2035,14 @@
         appId: "1:756423814562:web:068b8b378490d1647096fb",
         measurementId: "G-1BJ29LH3P7"
     };
+
+    // ================================
+    // PRO (UI-only, client-side state)
+    // ================================
+    // Stripe/checkout page
+    const PRO_SUBSCRIBE_URL = 'https://buy.stripe.com/4gMbJ03UWg325qp4C12cg00';
+    // Redeem code (client-side check)
+    const PRO_REDEEM_CODE = 'HannahJan0427';
 
     // ================================
     // DOM ELEMENTS
@@ -1863,6 +2101,74 @@
     let hapticEnabled = false;
     let autoscrollEnabled = true;
     const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+
+    // Voice playback controls
+    let speechRate = 1.0;
+    let activeSpeechMessageId = null;
+    let speechPaused = false;
+
+    // Per-user custom prompt
+    let customSystemPrompt = '';
+
+    // Pro state
+    const PRO_TRIAL_DAYS = 7;
+    const PRO_STATE_KEY = 'hannah_pro_state_v1';
+    let proState = { active: false, until: 0, source: '' }; // source: trial | redeem | subscribe
+    const proLockedModels = new Set();
+
+    function isProEligible() {
+        // Pro should be tied to a signed-in Firebase account (email)
+        return !!(firebaseReady && firestoreDb && currentUser?.uid && currentUser?.email);
+    }
+
+    function clearProState(reason = '') {
+        proState = { active: false, until: 0, source: '' };
+        try { localStorage.removeItem(PRO_STATE_KEY); } catch { /* ignore */ }
+        updateProUI();
+        if (reason) showToast(reason, 'info');
+    }
+
+    async function loadProStateFromCloud() {
+        if (!isProEligible()) {
+            clearProState();
+            return;
+        }
+        try {
+            const ref = firestoreDb.collection('users').doc(currentUser.uid).collection('meta').doc('pro');
+            const snap = await ref.get();
+            const data = snap.exists ? (snap.data() || {}) : {};
+            const until = Number(data.until || 0);
+            const source = (data.source || '').toString();
+            const active = !!data.active;
+            proState = { active, until, source };
+            saveProState();
+            updateProUI();
+        } catch (err) {
+            console.warn('Pro state load failed:', err);
+            // keep local state
+            updateProUI();
+        }
+    }
+
+    async function saveProStateToCloud() {
+        if (!isProEligible()) return;
+        try {
+            const ref = firestoreDb.collection('users').doc(currentUser.uid).collection('meta').doc('pro');
+            await ref.set({
+                active: !!proState.active,
+                until: Number(proState.until || 0),
+                source: (proState.source || '').toString(),
+                updatedAt: Date.now()
+            }, { merge: true });
+        } catch (err) {
+            console.warn('Pro state save failed:', err);
+        }
+    }
+
+    // UI state helpers
+    const SIDEBAR_COLLAPSED_KEY = 'hannah_sidebar_collapsed';
+    let chatContextMenuEl = null;
+    let chatContextMenuForId = null;
 
     // Firebase state
     let firebaseReady = false;
@@ -1934,13 +2240,81 @@
                 if (voice) utterance.voice = voice;
             }
 
-            utterance.rate = 1;
+            utterance.rate = Math.max(0.5, Math.min(2, Number(speechRate || 1.0)));
             utterance.pitch = 1;
+
+            utterance.onend = () => {
+                const finishedId = activeSpeechMessageId;
+                activeSpeechMessageId = null;
+                speechPaused = false;
+                if (finishedId) updateSpeechButtonIcon(finishedId, 'volume_up');
+            };
+
+            utterance.onerror = () => {
+                const finishedId = activeSpeechMessageId;
+                activeSpeechMessageId = null;
+                speechPaused = false;
+                if (finishedId) updateSpeechButtonIcon(finishedId, 'volume_up');
+            };
+
             window.speechSynthesis.speak(utterance);
         } catch (err) {
             console.warn('Speech synthesis failed:', err);
         }
     }
+
+    function updateSpeechButtonIcon(messageId, iconName) {
+        try {
+            const btn = document.querySelector(`button[data-speech-id="${CSS.escape(messageId)}"]`);
+            if (!btn) return;
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = iconName;
+        } catch {
+            // ignore
+        }
+    }
+
+    window.toggleSpeechById = function(messageId) {
+        if (!speechSupported) {
+            showToast('Speech not supported in this browser', 'error');
+            return;
+        }
+        const text = messageTexts[messageId];
+        if (!text) return;
+
+        // Same message: pause/resume
+        if (activeSpeechMessageId === messageId && window.speechSynthesis.speaking) {
+            if (!speechPaused) {
+                window.speechSynthesis.pause();
+                speechPaused = true;
+                updateSpeechButtonIcon(messageId, 'play_arrow');
+                return;
+            }
+            window.speechSynthesis.resume();
+            speechPaused = false;
+            updateSpeechButtonIcon(messageId, 'pause');
+            return;
+        }
+
+        // New message: stop previous + start new
+        if (activeSpeechMessageId && activeSpeechMessageId !== messageId) {
+            updateSpeechButtonIcon(activeSpeechMessageId, 'volume_up');
+        }
+        try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+
+        activeSpeechMessageId = messageId;
+        speechPaused = false;
+        updateSpeechButtonIcon(messageId, 'pause');
+        speakText(text);
+    };
+
+    window.stopAllSpeech = function() {
+        if (!speechSupported) return;
+        try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+        if (activeSpeechMessageId) updateSpeechButtonIcon(activeSpeechMessageId, 'volume_up');
+        activeSpeechMessageId = null;
+        speechPaused = false;
+    };
 
     function maybeSpeakResponse(text) {
         if (!voicePlayback || !speechSupported) return;
@@ -1995,6 +2369,400 @@
         }, 3500);
     }
 
+    // ================================
+    // PRO HELPERS
+    // ================================
+    function loadProState() {
+        try {
+            const raw = localStorage.getItem(PRO_STATE_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return;
+            proState = {
+                active: !!parsed.active,
+                until: Number(parsed.until || 0),
+                source: (parsed.source || '').toString()
+            };
+        } catch {
+            // ignore
+        }
+        // Expire trial/redeem automatically
+        if (proState.active && proState.until && Date.now() > proState.until && proState.source !== 'subscribe') {
+            proState.active = false;
+            proState.until = 0;
+            proState.source = '';
+            saveProState();
+        }
+    }
+
+    function saveProState() {
+        try {
+            localStorage.setItem(PRO_STATE_KEY, JSON.stringify(proState));
+        } catch {
+            // ignore
+        }
+    }
+
+    function isProActive() {
+        if (!proState?.active) return false;
+        if (proState.source === 'subscribe') return true;
+        if (proState.until && Date.now() <= proState.until) return true;
+        // Expired
+        proState.active = false;
+        proState.until = 0;
+        proState.source = '';
+        saveProState();
+        return false;
+    }
+
+    function getProStatusLine() {
+        if (!isProActive()) return 'Free plan';
+        if (proState.source === 'subscribe') return 'Pro active';
+        if (proState.until) {
+            const msLeft = Math.max(0, proState.until - Date.now());
+            const days = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+            return `Pro active — ${days} day${days === 1 ? '' : 's'} left`;
+        }
+        return 'Pro active';
+    }
+
+    function openProModal() {
+        const proModal = document.getElementById('proModal');
+        proModal?.classList.add('active');
+        updateProUI();
+    }
+
+    function closeProModal() {
+        const proModal = document.getElementById('proModal');
+        proModal?.classList.remove('active');
+    }
+
+    function startProTrial() {
+        if (!isProEligible()) {
+            showToast('Sign in to start a Pro trial (trial is tied to your account)', 'info');
+            return;
+        }
+        if (isProActive()) {
+            showToast('Pro is already active', 'info');
+            return;
+        }
+        proState.active = true;
+        proState.source = 'trial';
+        proState.until = Date.now() + PRO_TRIAL_DAYS * 24 * 60 * 60 * 1000;
+        saveProState();
+        saveProStateToCloud();
+        updateProUI();
+        showToast(`Pro trial started (${PRO_TRIAL_DAYS} days)`, 'success');
+    }
+
+    function redeemProCode(codeRaw) {
+        if (!isProEligible()) {
+            showToast('Sign in to redeem a code (code is tied to your account)', 'info');
+            return;
+        }
+        const code = (codeRaw || '').trim();
+        if (!code) {
+            showToast('Enter a redeem code', 'error');
+            return;
+        }
+
+        if (code !== PRO_REDEEM_CODE) {
+            showToast('Invalid redeem code', 'error');
+            return;
+        }
+
+        // Client-side code check; grant 30 days.
+        proState.active = true;
+        proState.source = 'redeem';
+        proState.until = Date.now() + 30 * 24 * 60 * 60 * 1000;
+        saveProState();
+        saveProStateToCloud();
+        updateProUI();
+        showToast('Code redeemed — Pro unlocked', 'success');
+    }
+
+    function updateProUI() {
+        const tryProBtn = document.getElementById('tryProBtn');
+        const proStatusText = document.getElementById('proStatusText');
+        const startTrialBtn = document.getElementById('startTrialBtn');
+        const proModalTitle = document.getElementById('proModalTitle');
+        const proGetSection = document.getElementById('proGetSection');
+        const proRedeemSection = document.getElementById('proRedeemSection');
+
+        if (proStatusText) proStatusText.textContent = getProStatusLine();
+
+        if (tryProBtn) {
+            const active = isProActive();
+            tryProBtn.classList.toggle('active', active);
+            // Keep the existing visual but update label slightly when active
+            const label = active ? 'Pro' : 'Try Pro';
+            const icon = tryProBtn.querySelector('.material-symbols-outlined');
+            tryProBtn.innerHTML = `${icon ? icon.outerHTML : '<span class="material-symbols-outlined">stars</span>'} ${label}`;
+        }
+
+        if (startTrialBtn) {
+            startTrialBtn.disabled = isProActive() || !isProEligible();
+            startTrialBtn.style.opacity = startTrialBtn.disabled ? '0.6' : '1';
+            startTrialBtn.style.cursor = startTrialBtn.disabled ? 'not-allowed' : 'pointer';
+        }
+
+        // Pro-only: typography + input placeholder
+        document.body.classList.toggle('pro-active', isProActive());
+        if (userInput) {
+            userInput.placeholder = isProActive()
+                ? '𝚃𝚢𝚙𝚎 𝚜𝚘𝚖𝚎𝚝𝚑𝚒𝚗𝚐 𝚝𝚘 𝚜𝚝𝚊𝚛𝚝'
+                : 'Ask Hannah anything...';
+        }
+
+        // Pro modal: when already Pro, show benefits only
+        if (proModalTitle) proModalTitle.textContent = isProActive() ? 'Hannah Pro' : 'Try Hannah Pro';
+        if (proGetSection) proGetSection.style.display = isProActive() ? 'none' : 'block';
+        if (proRedeemSection) proRedeemSection.style.display = isProActive() ? 'none' : 'block';
+
+        applyProLocksToModelSelect();
+    }
+
+    // Pro typography (no external fonts)
+    (function ensureProTypographyStyle() {
+        const styleId = 'hannahProTypography';
+        if (document.getElementById(styleId)) return;
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            body.pro-active {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                letter-spacing: 0.2px;
+            }
+            body.pro-active textarea,
+            body.pro-active input,
+            body.pro-active select,
+            body.pro-active button,
+            body.pro-active .brand,
+            body.pro-active .greeting {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            }
+        `;
+        document.head.appendChild(style);
+    })();
+
+    // ================================
+    // USER SETTINGS SYNC (per signed-in account)
+    // ================================
+    async function loadUserSettingsFromCloud() {
+        if (!(firebaseReady && firestoreDb && currentUser?.uid && currentUser?.email)) return;
+        try {
+            const ref = firestoreDb.collection('users').doc(currentUser.uid).collection('meta').doc('settings');
+            const snap = await ref.get();
+            if (!snap.exists) return;
+            const data = snap.data() || {};
+            if (typeof data.systemPrompt === 'string') customSystemPrompt = data.systemPrompt;
+            if (typeof data.speechRate === 'number') speechRate = data.speechRate;
+
+            // Reflect UI
+            const systemPromptInput = document.getElementById('systemPromptInput');
+            if (systemPromptInput) systemPromptInput.value = customSystemPrompt || '';
+            const rateSlider = document.getElementById('speechRateSlider');
+            const rateDisplay = document.getElementById('speechRateDisplay');
+            if (rateSlider) rateSlider.value = String(speechRate || 1.0);
+            if (rateDisplay) rateDisplay.textContent = `${(speechRate || 1.0).toFixed(1)}×`;
+
+            // Also keep local for offline
+            try { localStorage.setItem('hannah_systemPrompt', customSystemPrompt || ''); } catch { /* ignore */ }
+            try { localStorage.setItem('hannah_speechRate', String(speechRate || 1.0)); } catch { /* ignore */ }
+        } catch (err) {
+            console.warn('Cloud settings load failed:', err);
+        }
+    }
+
+    let settingsSyncTimer = null;
+    function scheduleUserSettingsSync() {
+        if (!(firebaseReady && firestoreDb && currentUser?.uid && currentUser?.email)) return;
+        clearTimeout(settingsSyncTimer);
+        settingsSyncTimer = setTimeout(async () => {
+            try {
+                const ref = firestoreDb.collection('users').doc(currentUser.uid).collection('meta').doc('settings');
+                await ref.set({
+                    systemPrompt: (customSystemPrompt || '').toString(),
+                    speechRate: Number(speechRate || 1.0),
+                    updatedAt: Date.now()
+                }, { merge: true });
+            } catch (err) {
+                console.warn('Cloud settings sync failed:', err);
+            }
+        }, 700);
+    }
+
+    function inferProLock(value = '', label = '', size = '') {
+        const v = (value || '').toString().toLowerCase();
+        const t = (label || '').toString().toLowerCase();
+        const s = (size || '').toString().toLowerCase();
+        if (/(\bpro\b|gpt-?4|claude|opus|sonnet|gemini|ultra)/.test(v + ' ' + t)) return true;
+        if (/(70b|34b|22b|13b|mixtral|large|xl|heavy)/.test(v + ' ' + t)) return true;
+        const gbMatch = s.match(/([0-9.]+)\s*gb/);
+        if (gbMatch) {
+            const gb = parseFloat(gbMatch[1]);
+            if (!Number.isNaN(gb) && gb >= 4) return true;
+        }
+        return false;
+    }
+
+    function isProLockedModel(modelValue) {
+        return proLockedModels.has((modelValue || '').toString());
+    }
+
+    function applyProLocksToModelSelect() {
+        if (!modelSelect) return;
+        const active = isProActive();
+        const opts = Array.from(modelSelect.options || []);
+
+        opts.forEach(opt => {
+            if (!opt) return;
+            if (!opt.dataset.baseText) opt.dataset.baseText = opt.text;
+
+            const locked = isProLockedModel(opt.value);
+            if (locked && !active) {
+                opt.disabled = true;
+                opt.text = `${opt.dataset.baseText}  Pro 🔒`;
+            } else {
+                opt.disabled = false;
+                opt.text = opt.dataset.baseText;
+            }
+        });
+
+        // Ensure selected option isn't locked
+        const selected = modelSelect.options[modelSelect.selectedIndex];
+        if (selected?.disabled) {
+            const firstEnabled = opts.find(o => !o.disabled);
+            if (firstEnabled) modelSelect.value = firstEnabled.value;
+        }
+    }
+
+    // ================================
+    // SIDEBAR COLLAPSE
+    // ================================
+    function applySidebarCollapseFromStorage() {
+        const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+        const collapsed = stored === 'true';
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+    }
+
+    function toggleSidebarCollapsed() {
+        const next = !document.body.classList.contains('sidebar-collapsed');
+        document.body.classList.toggle('sidebar-collapsed', next);
+        try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? 'true' : 'false'); } catch { /* ignore */ }
+        closeChatContextMenu();
+    }
+
+    // ================================
+    // CHAT CONTEXT MENU (rename/delete)
+    // ================================
+    function closeChatContextMenu() {
+        if (chatContextMenuEl) {
+            chatContextMenuEl.remove();
+            chatContextMenuEl = null;
+        }
+        chatContextMenuForId = null;
+    }
+
+    function openChatContextMenu(chatId, anchorEl) {
+        closeChatContextMenu();
+        if (!chatId || !anchorEl) return;
+
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        menu.innerHTML = `
+            <button type="button" data-action="rename"><span class="material-symbols-outlined">edit</span>Rename</button>
+            <button type="button" data-action="delete" class="danger"><span class="material-symbols-outlined">delete</span>Delete</button>
+        `;
+
+        menu.addEventListener('click', async (e) => {
+            const btn = e.target.closest('button');
+            const action = btn?.dataset?.action;
+            if (!action) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (action === 'rename') {
+                const currentTitle = (chats[chatId]?.title || 'Conversation').toString();
+                const next = prompt('Rename chat:', currentTitle);
+                if (next !== null) {
+                    const name = (next || '').trim();
+                    chats[chatId] = chats[chatId] || { title: 'Conversation', messages: [], timestamp: Date.now() };
+                    chats[chatId].title = name || 'Conversation';
+                    saveChats();
+                    renderChatHistory();
+                    showToast('Chat renamed', 'success');
+                }
+                closeChatContextMenu();
+                return;
+            }
+
+            if (action === 'delete') {
+                const ok = confirm('Delete this chat?');
+                if (ok) {
+                    await deleteChat(chatId);
+                    showToast('Chat deleted', 'info');
+                }
+                closeChatContextMenu();
+                return;
+            }
+        });
+
+        document.body.appendChild(menu);
+        chatContextMenuEl = menu;
+        chatContextMenuForId = chatId;
+
+        // Position near button
+        const r = anchorEl.getBoundingClientRect();
+        const mr = menu.getBoundingClientRect();
+        let left = r.right - mr.width;
+        let top = r.bottom + 8;
+        left = Math.max(8, Math.min(left, window.innerWidth - mr.width - 8));
+        top = Math.max(8, Math.min(top, window.innerHeight - mr.height - 8));
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+    }
+
+    function toggleChatContextMenu(chatId, anchorEl) {
+        if (chatContextMenuForId === chatId) {
+            closeChatContextMenu();
+            return;
+        }
+        openChatContextMenu(chatId, anchorEl);
+    }
+
+    async function deleteChat(chatId) {
+        if (!chatId || !chats[chatId]) return;
+
+        // Remove from cloud if available
+        try {
+            if (firebaseReady && firestoreDb && currentUser?.uid) {
+                await firestoreDb.collection('users').doc(currentUser.uid).collection('chats').doc(chatId).delete();
+            }
+        } catch (err) {
+            console.warn('Cloud delete failed:', err);
+        }
+
+        delete chats[chatId];
+        saveChats();
+
+        if (currentChatId === chatId) {
+            const nextId = Object.entries(chats)
+                .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0))
+                .map(([id]) => id)[0];
+
+            if (nextId) {
+                loadChat(nextId);
+            } else {
+                currentChatId = null;
+                newChat();
+            }
+        } else {
+            renderChatHistory();
+            updateStats();
+        }
+    }
+
     async function checkConnection() {
         updateConnectionStatus('connecting');
         try {
@@ -2040,6 +2808,13 @@
         setupEventListeners();
         loadSettings();
 
+        // Ensure any leftover browser TTS is stopped on reload
+        window.stopAllSpeech?.();
+
+        loadProState();
+        applySidebarCollapseFromStorage();
+        updateProUI();
+
         await initFirebase();
         await loadChatsPreferCloud();
 
@@ -2050,6 +2825,10 @@
 
         checkConnection().then(() => loadSystem());
     }
+
+    window.addEventListener('beforeunload', () => {
+        try { window.stopAllSpeech?.(); } catch { /* ignore */ }
+    });
 
     function canUseFirebase() {
         return !!(window.firebase && FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey);
@@ -2104,6 +2883,26 @@
                 }
 
                 updateAccountUI();
+
+                // Pro is tied to signed-in accounts: if user is guest, disable Pro.
+                if (!currentUser?.email) {
+                    clearProState();
+                    // Clear user-specific settings when not signed in
+                    customSystemPrompt = '';
+                    speechRate = 1.0;
+                    const systemPromptInput = document.getElementById('systemPromptInput');
+                    if (systemPromptInput) systemPromptInput.value = '';
+                    const rateSlider = document.getElementById('speechRateSlider');
+                    const rateDisplay = document.getElementById('speechRateDisplay');
+                    if (rateSlider) rateSlider.value = '1';
+                    if (rateDisplay) rateDisplay.textContent = '1.0×';
+                    saveSettings();
+                } else {
+                    // Load Pro state for this account
+                    await loadProStateFromCloud();
+                    // Load per-user settings for this account
+                    await loadUserSettingsFromCloud();
+                }
 
                 // If the user changes (anon->email, sign out, etc.), reload chats.
                 await loadChatsPreferCloud(true);
@@ -2244,23 +3043,24 @@
     }
 
     async function loadChatsPreferCloud(force = false) {
-        // Avoid reloading repeatedly on startup
-        if (!force && Object.keys(chats).length) {
-            renderChatHistory();
-            return;
-        }
-
-        // Prefer Firestore if ready + signed in
+        // Always prefer Firestore when available.
+        // Use local storage only as a fallback if Firestore is unavailable or errors.
         if (firebaseReady && firestoreDb && currentUser?.uid) {
             const ok = await loadChatsFromFirestore();
             if (ok) {
-                // Cache a local copy for offline fallback
-                localStorage.setItem('hannah_chats', JSON.stringify(chats));
+                // Cache a local copy for offline fallback (but don't prefer it over cloud).
+                try { localStorage.setItem('hannah_chats', JSON.stringify(chats)); } catch { /* ignore */ }
                 renderChatHistory();
                 return;
             }
         }
 
+        // If Firebase isn't ready (or Firestore failed), fall back to local.
+        // Avoid thrashing local loads unless forced.
+        if (!force && Object.keys(chats).length) {
+            renderChatHistory();
+            return;
+        }
         loadChatsLocal();
     }
 
@@ -2349,7 +3149,24 @@
         sorted.slice(0, 50).forEach(([id, chat]) => {
             const item = document.createElement('div');
             item.className = `chat-item ${id === currentChatId ? 'active' : ''}`;
-            item.textContent = chat.title || 'Untitled';
+
+            const title = document.createElement('span');
+            title.className = 'chat-item-title';
+            title.textContent = chat.title || 'Untitled';
+
+            const menuBtn = document.createElement('button');
+            menuBtn.type = 'button';
+            menuBtn.className = 'chat-item-menu';
+            menuBtn.innerHTML = '<span class="material-symbols-outlined">more_horiz</span>';
+            menuBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleChatContextMenu(id, menuBtn);
+            });
+
+            item.appendChild(title);
+            item.appendChild(menuBtn);
+
             item.addEventListener('click', () => {
                 loadChat(id);
                 // Close sidebar on mobile
@@ -2723,7 +3540,7 @@
                     <span class="material-symbols-outlined">refresh</span>
                     Regen
                 </button>
-                <button class="action-btn" onclick="speakTextById('${safeId}')" title="Read aloud">
+                <button class="action-btn" data-speech-id="${safeId}" onclick="toggleSpeechById('${safeId}')" title="Read aloud (play/pause)">
                     <span class="material-symbols-outlined">volume_up</span>
                 </button>
                 <button class="action-btn" ${goodStyle} onclick="feedbackMessage(this, 'good', '${safeId}')" title="Good response">
@@ -2744,9 +3561,9 @@
         `;
     }
 
+    // Backwards-compat: route to play/pause toggle
     window.speakTextById = function(id) {
-        const text = messageTexts[id];
-        if (text) speakText(text);
+        window.toggleSpeechById(id);
     };
 
     window.copyText = function(btn, idOrText, mode = 'full') {
@@ -2925,7 +3742,17 @@
             return;
         }
         if (!model || isGenerating) return;
-        if (modelSelect.options[modelSelect.selectedIndex]?.disabled) return;
+
+        if (isProLockedModel(model) && !isProActive()) {
+            showToast('That model requires Pro. Start a free trial to unlock it.', 'info');
+            openProModal();
+            return;
+        }
+
+        if (modelSelect.options[modelSelect.selectedIndex]?.disabled) {
+            showToast('That model is currently unavailable', 'error');
+            return;
+        }
         
         // Check connection first
         if (!isConnected) {
@@ -3003,13 +3830,22 @@
             setGenerating(true);
             abortController = new AbortController();
 
+            // Build a robust request message using user instructions + current message.
+            // Also cap history length (larger cap for Pro).
+            const historyCap = isProActive() ? 80 : 24;
+            const historyToSend = conversation.slice(-historyCap);
+
+            const sys = (customSystemPrompt || '').trim();
+            let requestMessage = sys
+                ? `[User instructions]\n${sys}\n\n[User message]\n${text}`
+                : text;
+
             // If Web Search is enabled, fetch a small live context (Wikipedia API) and prepend it to the backend request.
             // This is client-side only and avoids exposing backend implementation details.
-            let requestMessage = text;
             if (internetMode) {
                 const web = await getWebContext(text);
                 if (web?.context) {
-                    requestMessage = `${text}\n\n[Web context retrieved on ${new Date().toISOString().slice(0, 10)}]\n${web.context}`;
+                    requestMessage = `${requestMessage}\n\n[Web context retrieved on ${new Date().toISOString().slice(0, 10)}]\n${web.context}`;
                     if (web.sources?.length) {
                         requestMessage += `\n\nSources:\n${web.sources.map(s => `- ${s}`).join('\n')}`;
                     }
@@ -3025,7 +3861,7 @@
                 body: JSON.stringify({
                     message: requestMessage,
                     model: model,
-                    history: conversation,
+                    history: historyToSend,
                     temperature: temperature,
                     top_p: topP,
                     max_tokens: maxTokens,
@@ -3302,11 +4138,18 @@
             const modelsBody = document.getElementById('modelsBody');
             modelsBody.innerHTML = '';
 
+            proLockedModels.clear();
+
             data.models?.forEach(m => {
                 const opt = document.createElement('option');
                 // Use filename as value (backend expects filename)
                 opt.value = m.filename || m.name;
                 opt.text = m.display_name || m.name || 'Model';
+                opt.dataset.baseText = opt.text;
+
+                if (inferProLock(opt.value, opt.text, m.size || '')) {
+                    proLockedModels.add(opt.value);
+                }
                 modelSelect.add(opt);
 
                 modelsBody.innerHTML += `
@@ -3316,6 +4159,8 @@
                     </tr>
                 `;
             });
+
+            applyProLocksToModelSelect();
 
             const statRes = await fetch(`${API_BASE}/api/status`);
             const stats = await statRes.json();
@@ -3330,6 +4175,14 @@
         } catch (err) {
             console.error('Failed to load system:', err);
             modelSelect.innerHTML = '<option value="qwen2.5-0.5b-instruct-q4_k_m.gguf">Hannah-1.1 Heavy</option><option value="qwen2.5-0.5b-instruct-q2_k.gguf">Hannah-1.1 Light</option>';
+
+            // Apply pro lock heuristics to fallback options
+            proLockedModels.clear();
+            Array.from(modelSelect.options || []).forEach(opt => {
+                if (!opt.dataset.baseText) opt.dataset.baseText = opt.text;
+                if (inferProLock(opt.value, opt.text, '')) proLockedModels.add(opt.value);
+            });
+            applyProLocksToModelSelect();
             updateConnectionStatus('disconnected');
         }
     }
@@ -3381,6 +4234,8 @@
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         
         mobileMenuBtn.addEventListener('click', () => {
+            // Ensure sidebar is visible when opened on mobile
+            document.body.classList.remove('sidebar-collapsed');
             sidebar.classList.add('open');
             sidebarOverlay.classList.add('show');
         });
@@ -3394,6 +4249,12 @@
         document.getElementById('newChatBtn').addEventListener('click', () => {
             sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('show');
+        });
+
+        // Sidebar collapse (desktop)
+        document.getElementById('sidebarCollapseBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleSidebarCollapsed();
         });
 
         userAvatar.addEventListener('click', () => {
@@ -3464,6 +4325,7 @@
                 await firebaseAuth.signOut();
                 if (authEmail) authEmail.value = '';
                 if (authPassword) authPassword.value = '';
+                clearProState();
                 showToast('Signed out', 'info');
                 // onAuthStateChanged will re-create anonymous session
                 closeModal(accountModal)();
@@ -3480,11 +4342,54 @@
 
         document.getElementById('uploadCloseBtn').addEventListener('click', closeModal(uploadModal));
 
+        // Pro modal
+        const tryProBtn = document.getElementById('tryProBtn');
+        const proModal = document.getElementById('proModal');
+        tryProBtn?.addEventListener('click', () => openProModal());
+        document.getElementById('proCloseBtn')?.addEventListener('click', () => closeProModal());
+        document.getElementById('startTrialBtn')?.addEventListener('click', () => {
+            startProTrial();
+            closeProModal();
+            // Refresh locks immediately
+            applyProLocksToModelSelect();
+        });
+        document.getElementById('subscribeBtn')?.addEventListener('click', () => {
+            if (PRO_SUBSCRIBE_URL) {
+                window.open(PRO_SUBSCRIBE_URL, '_blank', 'noopener');
+            } else {
+                showToast('Set PRO_SUBSCRIBE_URL to enable checkout', 'info');
+            }
+        });
+        document.getElementById('proRedeemBtn')?.addEventListener('click', () => {
+            const code = document.getElementById('proRedeemInput')?.value;
+            redeemProCode(code);
+        });
+
         window.addEventListener('click', e => {
             if (e.target === statsModal) closeModal(statsModal)();
             if (e.target === settingsModal) closeModal(settingsModal)();
             if (e.target === accountModal) closeModal(accountModal)();
             if (e.target === uploadModal) closeModal(uploadModal)();
+            if (proModal && e.target === proModal) closeProModal();
+
+            // Clicking elsewhere closes the chat context menu
+            if (chatContextMenuEl && !e.target.closest('.context-menu') && !e.target.closest('.chat-item-menu')) {
+                closeChatContextMenu();
+            }
+        });
+
+        // Close context menu on scroll/resize
+        window.addEventListener('resize', () => closeChatContextMenu());
+        chatList?.addEventListener('scroll', () => closeChatContextMenu());
+
+        // Model select: if a Pro model is chosen (via keyboard), prompt upgrade
+        modelSelect?.addEventListener('change', () => {
+            const model = modelSelect.value;
+            if (isProLockedModel(model) && !isProActive()) {
+                showToast('That model requires Pro. Start a free trial to unlock it.', 'info');
+                applyProLocksToModelSelect();
+                openProModal();
+            }
         });
 
         // Upload Modal Logic
@@ -3735,6 +4640,21 @@
             saveSettings();
         });
 
+        document.getElementById('speechRateSlider')?.addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            if (!Number.isNaN(v)) speechRate = v;
+            const rateDisplay = document.getElementById('speechRateDisplay');
+            if (rateDisplay) rateDisplay.textContent = `${(speechRate || 1.0).toFixed(1)}×`;
+            saveSettings();
+            scheduleUserSettingsSync();
+        });
+
+        document.getElementById('systemPromptInput')?.addEventListener('input', (e) => {
+            customSystemPrompt = (e.target.value || '').toString();
+            saveSettings();
+            scheduleUserSettingsSync();
+        });
+
         document.getElementById('notifBtn')?.addEventListener('click', async () => {
             if (!("Notification" in window)) {
                 showToast('Notifications not supported', 'error');
@@ -3933,6 +4853,23 @@
             // We'll set the select value after voices are loaded
         }
 
+        const storedSpeechRate = localStorage.getItem('hannah_speechRate');
+        if (storedSpeechRate) {
+            const r = parseFloat(storedSpeechRate);
+            if (!Number.isNaN(r)) speechRate = r;
+        }
+        const rateSlider = document.getElementById('speechRateSlider');
+        const rateDisplay = document.getElementById('speechRateDisplay');
+        if (rateSlider) rateSlider.value = String(speechRate || 1.0);
+        if (rateDisplay) rateDisplay.textContent = `${(speechRate || 1.0).toFixed(1)}×`;
+
+        const storedSystemPrompt = localStorage.getItem('hannah_systemPrompt');
+        if (storedSystemPrompt) {
+            customSystemPrompt = storedSystemPrompt;
+        }
+        const systemPromptInput = document.getElementById('systemPromptInput');
+        if (systemPromptInput) systemPromptInput.value = customSystemPrompt || '';
+
         const storedHaptic = localStorage.getItem('hannah_haptic');
         hapticEnabled = storedHaptic === 'true';
         document.getElementById('hapticToggle').checked = hapticEnabled;
@@ -3956,6 +4893,8 @@
         localStorage.setItem('hannah_voiceURI', selectedVoiceURI);
         localStorage.setItem('hannah_haptic', hapticEnabled);
         localStorage.setItem('hannah_autoscroll', autoscrollEnabled);
+        localStorage.setItem('hannah_speechRate', String(speechRate || 1.0));
+        localStorage.setItem('hannah_systemPrompt', customSystemPrompt || '');
     }
 
     function applyTheme(theme) {
