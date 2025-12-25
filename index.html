@@ -51,7 +51,7 @@
             padding: 12px;
             gap: 12px;
             overflow-y: auto;
-            transition: width 0.3s ease;
+            transition: width 0.3s ease, padding 0.3s ease;
             scrollbar-width: thin;
             scrollbar-color: var(--border) transparent;
         }
@@ -106,6 +106,11 @@
             color: var(--accent);
         }
 
+        .sidebar-toggle-container {
+            overflow: visible;
+            flex-shrink: 0;
+        }
+
         body.sidebar-collapsed .sidebar {
             width: 0;
             padding: 0;
@@ -113,9 +118,14 @@
             overflow: visible; /* allow the collapse button (fixed) to remain clickable */
         }
 
-        body.sidebar-collapsed .sidebar * {
+        body.sidebar-collapsed .sidebar > *:not(.sidebar-toggle-container) {
             pointer-events: none;
             opacity: 0;
+        }
+
+        body.sidebar-collapsed .sidebar .sidebar-toggle-container {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         /* Keep the collapse button visible so you can re-open the sidebar */
@@ -128,6 +138,7 @@
             opacity: 1;
             background: var(--bg-sidebar);
             border-color: var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         body.sidebar-collapsed #sidebarCollapseBtn * {
@@ -361,6 +372,11 @@
             padding: 16px 24px;
             border-bottom: 1px solid var(--border);
             background: var(--bg-body);
+            transition: padding-left 0.3s ease;
+        }
+
+        body.sidebar-collapsed .top-bar {
+            padding-left: 60px;
         }
 
         .brand {
@@ -772,6 +788,15 @@
             background: var(--bg-body);
         }
 
+        .footer-disclaimer {
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--text-dim);
+            text-align: center;
+            user-select: none;
+        }
+
         .input-box {
             background: var(--bg-sidebar);
             border-radius: 28px;
@@ -991,6 +1016,18 @@
             font-size: 12px;
             color: var(--accent);
             margin-bottom: 8px;
+        }
+
+        .thinking-panel {
+            margin: 10px 0 6px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 12px;
+            line-height: 1.35;
+            white-space: pre-wrap;
         }
 
         .thinking-dot {
@@ -1542,7 +1579,7 @@
 
 <!-- ========== SIDEBAR ========== -->
 <aside class="sidebar">
-    <div style="display:flex; align-items:center; justify-content: space-between; gap: 10px; padding: 0 4px;">
+    <div class="sidebar-toggle-container" style="display:flex; align-items:center; justify-content: space-between; gap: 10px; padding: 0 4px;">
         <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" title="Collapse sidebar">
             <span class="material-symbols-outlined">menu</span>
         </button>
@@ -1684,6 +1721,7 @@
         </div>
         <div class="char-counter" id="charCounter">0 / 4000</div>
         <div class="shortcuts-hint"><kbd>⏎</kbd> send · <kbd>Shift+⏎</kbd> new line · <kbd>⌘K</kbd> focus · <kbd>⌘N</kbd> new chat</div>
+        <div class="footer-disclaimer">Hannah can make mistakes, so double-check it</div>
     </div>
 
     <!-- Toast notification -->
@@ -1870,6 +1908,10 @@
                 <span style="font-size: 13px; color: var(--text);">Memory Cache</span>
                 <input type="checkbox" id="memoryCacheToggle" checked style="width: 18px; height: 18px; cursor: pointer;">
             </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
+                <span style="font-size: 13px; color: var(--text);">Show thinking panel</span>
+                <input type="checkbox" id="thinkingPanelToggle" style="width: 18px; height: 18px; cursor: pointer;">
+            </div>
         </div>
 
         <div class="modal-section">
@@ -1973,9 +2015,9 @@
                 <div>• Create more images, faster</div>
                 <div>• Remember goals and past conversations</div>
                 <div>• Plan travel and tasks with agent mode</div>
-                <div>• Organize projects and customize GPTs</div>
-                <div>• Produce and share videos on Sora</div>
-                <div>• Write code and build apps with Codex</div>
+                <div>• Organize projects and customize Hannah features</div>
+                <div>• Produce and share videos on VIRV</div>
+                <div>• Write code and build apps with Halarh</div>
             </div>
         </div>
 
@@ -2072,8 +2114,32 @@
     // ================================
     // STATE
     // ================================
-    let isGenerating = false;
-    let abortController = null;
+    // Per-chat run state so multiple chats can generate simultaneously.
+    // chatRun[chatId] = { generating: boolean, abortController: AbortController|null }
+    const chatRun = {};
+    function ensureChatRun(chatId) {
+        if (!chatId) return null;
+        if (!chatRun[chatId]) chatRun[chatId] = { generating: false, abortController: null };
+        return chatRun[chatId];
+    }
+    function isChatGenerating(chatId) {
+        return !!(chatId && chatRun[chatId]?.generating);
+    }
+    function anyChatGenerating() {
+        return Object.values(chatRun).some(v => !!v?.generating);
+    }
+    function setComposerGeneratingUI(next) {
+        sendBtn.disabled = next;
+        modelSelect.disabled = next;
+        stopBtn.style.display = next ? 'flex' : 'none';
+        sendBtn.style.display = next ? 'none' : 'flex';
+    }
+    function setGeneratingForChat(chatId, next) {
+        const run = ensureChatRun(chatId);
+        if (!run) return;
+        run.generating = next;
+        if (chatId === currentChatId) setComposerGeneratingUI(next);
+    }
     const conversation = [];
     let userName = 'User';
     let currentChatId = null;
@@ -2083,6 +2149,7 @@
     let deepThink = false;
     let internetMode = false;
     let memoryCache = true;
+    let showThinkingPanel = false;
     let creativeMode = false;
     let currentTheme = 'dark';
     let currentFontSize = '15px';
@@ -2644,6 +2711,7 @@
         const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
         const collapsed = stored === 'true';
         document.body.classList.toggle('sidebar-collapsed', collapsed);
+        updateSidebarToggleButtonUI();
     }
 
     function toggleSidebarCollapsed() {
@@ -2651,6 +2719,16 @@
         document.body.classList.toggle('sidebar-collapsed', next);
         try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? 'true' : 'false'); } catch { /* ignore */ }
         closeChatContextMenu();
+        updateSidebarToggleButtonUI();
+    }
+
+    function updateSidebarToggleButtonUI() {
+        const btn = document.getElementById('sidebarCollapseBtn');
+        if (!btn) return;
+        const icon = btn.querySelector('.material-symbols-outlined');
+        const collapsed = document.body.classList.contains('sidebar-collapsed');
+        btn.title = collapsed ? 'Open sidebar' : 'Collapse sidebar';
+        if (icon) icon.textContent = collapsed ? 'menu_open' : 'menu';
     }
 
     // ================================
@@ -2795,7 +2873,7 @@
 
     // Periodic connection check
     setInterval(() => {
-        if (!isGenerating) {
+        if (!anyChatGenerating()) {
             checkConnection();
         }
     }, 60000); // Check every 60 seconds
@@ -3178,19 +3256,47 @@
     }
 
     function newChat() {
+        // Don't create multiple empty chats. If any empty chat exists, switch to it.
+        const isEmptyChat = (id) => {
+            const c = chats[id];
+            return !!c && Array.isArray(c.messages) && c.messages.length === 0;
+        };
+
+        if (currentChatId && isEmptyChat(currentChatId)) {
+            // Already on an empty chat; just ensure the empty state is visible.
+            conversation.length = 0;
+            chatContainer.innerHTML = '';
+            emptyState.style.display = '';
+            chatContainer.appendChild(emptyState);
+            setupSuggestions();
+            renderChatHistory();
+            updateStats();
+            return;
+        }
+
+        const existingEmptyId = Object.entries(chats)
+            .sort((a, b) => (b[1]?.timestamp || 0) - (a[1]?.timestamp || 0))
+            .find(([id]) => isEmptyChat(id))?.[0];
+
+        if (existingEmptyId) {
+            loadChat(existingEmptyId);
+            return;
+        }
+
         currentChatId = `chat_${Date.now()}`;
         chats[currentChatId] = {
-            title: 'New Conversation',
+            title: 'New chat',
             messages: [],
             timestamp: Date.now()
         };
         conversation.length = 0;
         chatContainer.innerHTML = '';
-        const clone = emptyState.cloneNode(true);
-        chatContainer.appendChild(clone);
+        emptyState.style.display = '';
+        chatContainer.appendChild(emptyState);
         setupSuggestions();
         saveChats();
         renderChatHistory();
+        updateStats();
     }
 
     function loadChat(chatId) {
@@ -3202,6 +3308,15 @@
         conversation.length = 0;
         chatContainer.innerHTML = '';
 
+        // Rebuild in-memory history from this chat so the backend gets proper context
+        // when switching between conversations.
+        (chat.messages || []).forEach(m => {
+            if (!m) return;
+            const role = m.role === 'assistant' ? 'assistant' : 'user';
+            const content = (m.content ?? '').toString();
+            conversation.push({ role, content });
+        });
+
         chat.messages.forEach(msg => {
             if (msg.role === 'user') {
                 addUserMessage(msg, false);
@@ -3211,8 +3326,8 @@
         });
 
         if (chat.messages.length === 0) {
-            const clone = emptyState.cloneNode(true);
-            chatContainer.appendChild(clone);
+            emptyState.style.display = '';
+            chatContainer.appendChild(emptyState);
             setupSuggestions();
         }
 
@@ -3220,6 +3335,26 @@
 
         renderChatHistory();
         updateStats();
+
+        // Reflect generation state for this chat in the composer
+        setComposerGeneratingUI(isChatGenerating(chatId));
+    }
+
+    function buildHistoryForBackend(chatId, currentUserText, historyCap) {
+        const cap = Math.max(0, Number(historyCap) || 0);
+        const chat = chats[chatId];
+        const base = (chat?.messages || []).map(m => ({
+            role: m?.role === 'assistant' ? 'assistant' : 'user',
+            content: (m?.content ?? '').toString()
+        }));
+
+        // The current user message is already included in `message`, so avoid double-sending it.
+        const last = base[base.length - 1];
+        if (last && last.role === 'user' && (last.content || '').trim() === (currentUserText || '').trim()) {
+            base.pop();
+        }
+
+        return cap ? base.slice(-cap) : [];
     }
 
     function scrollToBottom() {
@@ -3629,7 +3764,7 @@
     };
 
     window.regenerate = function() {
-        if (isGenerating) return;
+        if (isChatGenerating(currentChatId)) return;
         const chatMessages = getChatMessages();
         if (!chatMessages || chatMessages.length < 2) return;
 
@@ -3639,7 +3774,7 @@
         if (!lastUserMsg?.content) return;
 
         // Clear from cache to force a fresh response
-        const cacheKey = getCacheKey(lastUserMsg.content, modelSelect.value);
+        const cacheKey = getCacheKey(currentChatId, lastUserMsg.content, modelSelect.value);
         delete responseCache[cacheKey];
 
         const ok = removeLastTurnFromStateAndUI();
@@ -3650,7 +3785,7 @@
     };
 
     window.editAsk = function(userMessageId) {
-        if (isGenerating) return;
+        if (isChatGenerating(currentChatId)) return;
         const chatMessages = getChatMessages();
         if (!chatMessages || chatMessages.length < 1) return;
 
@@ -3717,11 +3852,8 @@
     // CHAT LOGIC
     // ================================
     function setGenerating(next) {
-        isGenerating = next;
-        sendBtn.disabled = next;
-        modelSelect.disabled = next;
-        stopBtn.style.display = next ? 'flex' : 'none';
-        sendBtn.style.display = next ? 'none' : 'flex';
+        // Backwards compat: affects only the currently open chat
+        setGeneratingForChat(currentChatId, next);
     }
 
     function autoResizeTextarea() {
@@ -3741,7 +3873,7 @@
             showToast('Please enter a message', 'error');
             return;
         }
-        if (!model || isGenerating) return;
+        if (!model) return;
 
         if (isProLockedModel(model) && !isProActive()) {
             showToast('That model requires Pro. Start a free trial to unlock it.', 'info');
@@ -3766,14 +3898,22 @@
 
         const startTime = Date.now();
 
+        // Ensure a chat exists; capture chatId so tab switching won't break this request.
         if (!currentChatId) {
             newChat();
-        } else if (conversation.length === 0) {
+        }
+        const chatId = currentChatId;
+
+        // Allow parallel generation across chats, but block sending again in the same chat.
+        if (isChatGenerating(chatId)) return;
+
+        // Auto-title new chats from the first user message
+        if ((chats[chatId]?.messages?.length || 0) === 0) {
             updateChatTitle(text);
         }
 
         // Check cache first
-        const cached = getFromCache(text, model);
+        const cached = getFromCache(chatId, text, model);
         if (cached) {
             addUserMessage(text);
             addBotMessage(cached);
@@ -3795,9 +3935,17 @@
         addUserMessage(text);
         hapticFeedback();
 
+        const assistantMessageId = generateMessageId();
+
+        // Create assistant placeholder in chat state immediately (supports switching tabs mid-generation)
+        if (chats[chatId]) {
+            chats[chatId].messages.push({ id: assistantMessageId, role: 'assistant', content: '' });
+            chats[chatId].timestamp = Date.now();
+            saveChats();
+        }
+
         const botDiv = document.createElement('div');
         botDiv.className = 'message bot-msg';
-        const assistantMessageId = generateMessageId();
         botDiv.dataset.messageId = assistantMessageId;
         botDiv.innerHTML = `
             <div class="message-avatar"><span class="material-symbols-outlined">neurology</span></div>
@@ -3808,6 +3956,7 @@
                     <span class="thinking-dot"></span>
                     <span class="thinking-dot"></span>
                 </div>
+                <div class="thinking-panel" style="display:none"></div>
                 <div class="content"><div class="loading"><span></span><span></span><span></span></div></div>
                 <div class="message-actions"></div>
             </div>
@@ -3817,23 +3966,51 @@
 
         const contentDiv = botDiv.querySelector('.content');
         const thinkingDiv = botDiv.querySelector('.thinking-indicator');
+        const thinkingPanelDiv = botDiv.querySelector('.thinking-panel');
         let fullResponse = '';
         let hiddenBufferDirty = false;
+
+        const setThinkingPanel = (lines) => {
+            if (!thinkingPanelDiv) return;
+            if (!showThinkingPanel) {
+                thinkingPanelDiv.style.display = 'none';
+                return;
+            }
+            thinkingPanelDiv.style.display = 'block';
+            thinkingPanelDiv.textContent = Array.isArray(lines) ? lines.join('\n') : String(lines || '');
+        };
+
+        const updateAssistantInState = () => {
+            const chat = chats[chatId];
+            if (!chat?.messages?.length) return;
+            const idx = chat.messages.findIndex(m => m.id === assistantMessageId);
+            if (idx >= 0) {
+                chat.messages[idx].content = fullResponse;
+                chat.timestamp = Date.now();
+            }
+        };
+
         const flushHiddenBuffer = () => {
             if (!hiddenBufferDirty) return;
-            contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-            scrollToBottom();
+            if (botDiv.isConnected) {
+                contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
+                scrollToBottom();
+            }
             hiddenBufferDirty = false;
         };
 
         try {
-            setGenerating(true);
-            abortController = new AbortController();
+            setGeneratingForChat(chatId, true);
+            ensureChatRun(chatId).abortController = new AbortController();
+            setThinkingPanel([
+                'Preparing request…',
+                `Chat: ${chats[chatId]?.title || 'New chat'}`
+            ]);
 
             // Build a robust request message using user instructions + current message.
             // Also cap history length (larger cap for Pro).
             const historyCap = isProActive() ? 80 : 24;
-            const historyToSend = conversation.slice(-historyCap);
+            const historyToSend = buildHistoryForBackend(chatId, text, historyCap);
 
             const sys = (customSystemPrompt || '').trim();
             let requestMessage = sys
@@ -3843,6 +4020,7 @@
             // If Web Search is enabled, fetch a small live context (Wikipedia API) and prepend it to the backend request.
             // This is client-side only and avoids exposing backend implementation details.
             if (internetMode) {
+                setThinkingPanel(['Preparing request…', 'Web context: fetching summary…']);
                 const web = await getWebContext(text);
                 if (web?.context) {
                     requestMessage = `${requestMessage}\n\n[Web context retrieved on ${new Date().toISOString().slice(0, 10)}]\n${web.context}`;
@@ -3868,7 +4046,7 @@
                     deepThink: deepThink,
                     internet: internetMode
                 }),
-                signal: abortController.signal
+                signal: chatRun[chatId].abortController.signal
             });
 
             if (!response.ok) {
@@ -3899,52 +4077,52 @@
                 const json = await response.json();
                 fullResponse = json.text || json.response || json.message || JSON.stringify(json);
                 thinkingDiv.style.display = 'none';
+                if (thinkingPanelDiv) thinkingPanelDiv.style.display = 'none';
+                updateAssistantInState();
 
                 // If tab is hidden, don't rely on typing animation (timers may be throttled)
                 if (document.hidden) {
-                    contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-                    finalizeAssistantContent(contentDiv, fullResponse);
+                    if (botDiv.isConnected) {
+                        contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
+                        finalizeAssistantContent(contentDiv, fullResponse);
+                    }
                     const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
                     const timeDiv = document.createElement('div');
                     timeDiv.className = 'response-time';
                     timeDiv.textContent = `Response time: ${responseTime}s`;
-                    botDiv.querySelector('.message-content').appendChild(timeDiv);
+                    if (botDiv.isConnected) botDiv.querySelector('.message-content').appendChild(timeDiv);
 
-                    addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
+                    if (botDiv.isConnected) addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
                     maybeSpeakResponse(fullResponse);
-                    saveToCache(text, model, fullResponse);
-                    conversation.push({ role: 'assistant', content: fullResponse });
-                    if (chats[currentChatId]) {
-                        chats[currentChatId].messages.push({ id: assistantMessageId, role: 'assistant', content: fullResponse });
-                        saveChats();
-                    }
+                    saveToCache(chatId, text, model, fullResponse);
+                    updateAssistantInState();
+                    saveChats();
                     return;
                 }
 
                 let index = 0;
                 const typeEffect = () => {
                     if (index < fullResponse.length) {
-                        contentDiv.innerHTML = renderPlainTextToHtml(fullResponse.slice(0, index + 1));
-                        scrollToBottom();
+                        if (botDiv.isConnected) {
+                            contentDiv.innerHTML = renderPlainTextToHtml(fullResponse.slice(0, index + 1));
+                            scrollToBottom();
+                        }
                         index++;
                         setTimeout(typeEffect, 20);
                     } else {
-                        finalizeAssistantContent(contentDiv, fullResponse);
+                        if (botDiv.isConnected) finalizeAssistantContent(contentDiv, fullResponse);
                         // Add response time
                         const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
                         const timeDiv = document.createElement('div');
                         timeDiv.className = 'response-time';
                         timeDiv.textContent = `Response time: ${responseTime}s`;
-                        botDiv.querySelector('.message-content').appendChild(timeDiv);
+                        if (botDiv.isConnected) botDiv.querySelector('.message-content').appendChild(timeDiv);
                         
-                        addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
+                        if (botDiv.isConnected) addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
                         maybeSpeakResponse(fullResponse);
-                        saveToCache(text, model, fullResponse);
-                        conversation.push({ role: 'assistant', content: fullResponse });
-                        if (chats[currentChatId]) {
-                            chats[currentChatId].messages.push({ id: assistantMessageId, role: 'assistant', content: fullResponse });
-                            saveChats();
-                        }
+                        saveToCache(chatId, text, model, fullResponse);
+                        updateAssistantInState();
+                        saveChats();
                     }
                 };
                 typeEffect();
@@ -3981,22 +4159,30 @@
                         if (chunk) {
                             fullResponse += chunk;
                             thinkingDiv.style.display = 'none';
+                            setThinkingPanel(['Generating response…']);
+                            updateAssistantInState();
                             // Keep streaming render lightweight; avoid heavy DOM writes when tab is hidden.
                             if (document.hidden) {
                                 hiddenBufferDirty = true;
                             } else {
-                                contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-                                scrollToBottom();
+                                if (botDiv.isConnected) {
+                                    contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
+                                    scrollToBottom();
+                                }
                             }
                         }
                     } catch {
                         fullResponse += payload;
                         thinkingDiv.style.display = 'none';
+                        setThinkingPanel(['Generating response…']);
+                        updateAssistantInState();
                         if (document.hidden) {
                             hiddenBufferDirty = true;
                         } else {
-                            contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
-                            scrollToBottom();
+                            if (botDiv.isConnected) {
+                                contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
+                                scrollToBottom();
+                            }
                         }
                     }
                 }
@@ -4013,50 +4199,57 @@
                 if (document.hidden) {
                     hiddenBufferDirty = true;
                 } else {
-                    contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
+                    if (botDiv.isConnected) contentDiv.innerHTML = renderPlainTextToHtml(fullResponse);
                 }
             }
 
             thinkingDiv.style.display = 'none';
             flushHiddenBuffer();
-            finalizeAssistantContent(contentDiv, fullResponse);
-            saveToCache(text, model, fullResponse);
-            conversation.push({ role: 'assistant', content: fullResponse });
-            if (chats[currentChatId]) {
-                chats[currentChatId].messages.push({ id: assistantMessageId, role: 'assistant', content: fullResponse });
-                saveChats();
-            }
+            if (thinkingPanelDiv) thinkingPanelDiv.style.display = 'none';
+            updateAssistantInState();
+            if (botDiv.isConnected) finalizeAssistantContent(contentDiv, fullResponse);
+            saveToCache(chatId, text, model, fullResponse);
+            saveChats();
             
             // Add response time
             const responseTime = ((Date.now() - startTime) / 1000).toFixed(1);
             const timeDiv = document.createElement('div');
             timeDiv.className = 'response-time';
             timeDiv.textContent = `Response time: ${responseTime}s`;
-            botDiv.querySelector('.message-content').appendChild(timeDiv);
+            if (botDiv.isConnected) botDiv.querySelector('.message-content').appendChild(timeDiv);
             
-            addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
+            if (botDiv.isConnected) addMessageActions(botDiv.querySelector('.message-actions'), fullResponse, assistantMessageId, null);
             maybeSpeakResponse(fullResponse);
 
             document.removeEventListener('visibilitychange', onVisibility);
 
         } catch (err) {
             if (err.name === 'AbortError') {
-                contentDiv.innerHTML = '<span style="color: var(--text-dim)">Stopped</span>';
+                if (!fullResponse) fullResponse = 'Stopped';
+                updateAssistantInState();
+                if (botDiv.isConnected) {
+                    contentDiv.innerHTML = '<span style="color: var(--text-dim)">Stopped</span>';
+                }
                 showToast('Generation stopped', 'info');
             } else {
                 console.error('Error:', err);
                 const msg = (err?.message || 'Request failed').toString();
-                contentDiv.innerHTML = `<span style="color: var(--danger)">Request failed: ${escapeHtml(msg)}</span>`;
+                if (!fullResponse) fullResponse = `Request failed: ${msg}`;
+                updateAssistantInState();
+                if (botDiv.isConnected) {
+                    contentDiv.innerHTML = `<span style="color: var(--danger)">Request failed: ${escapeHtml(msg)}</span>`;
+                }
                 updateConnectionStatus('disconnected');
                 showToast('Connection lost. Trying to reconnect...', 'error');
                 checkConnection();
             }
 
             // Keep actions available so the user can Regenerate immediately
-            addMessageActions(botDiv.querySelector('.message-actions'), fullResponse || '', assistantMessageId, null);
+            if (botDiv.isConnected) addMessageActions(botDiv.querySelector('.message-actions'), fullResponse || '', assistantMessageId, null);
+            saveChats();
         } finally {
-            setGenerating(false);
-            abortController = null;
+            setGeneratingForChat(chatId, false);
+            if (chatRun[chatId]) chatRun[chatId].abortController = null;
         }
     }
 
@@ -4117,8 +4310,8 @@
             }
 
             return {
-                context: contexts.slice(0, 2).join('\n\n---\n\n'),
-                sources: []
+                context: blocks.slice(0, 2).join('\n\n---\n\n'),
+                sources: sources.slice(0, 4)
             };
         } catch {
             return { context: '', sources: [] };
@@ -4192,7 +4385,7 @@
     // ================================
     function setupEventListeners() {
         sendBtn.addEventListener('click', () => sendMessage());
-        stopBtn.addEventListener('click', () => abortController?.abort());
+        stopBtn.addEventListener('click', () => chatRun[currentChatId]?.abortController?.abort());
         userInput.addEventListener('input', autoResizeTextarea);
         userInput.addEventListener('keypress', e => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -4220,9 +4413,9 @@
             }
 
             // Esc: Stop generation
-            if (e.key === 'Escape' && isGenerating) {
+            if (e.key === 'Escape' && isChatGenerating(currentChatId)) {
                 e.preventDefault();
-                abortController?.abort();
+                chatRun[currentChatId]?.abortController?.abort();
             }
         });
 
@@ -4587,6 +4780,12 @@
             saveSettings();
         });
 
+        // Thinking panel toggle
+        document.getElementById('thinkingPanelToggle')?.addEventListener('change', (e) => {
+            showThinkingPanel = e.target.checked;
+            saveSettings();
+        });
+
         // Creative mode toggle
         document.getElementById('creativeToggle').addEventListener('change', (e) => {
             creativeMode = e.target.checked;
@@ -4813,6 +5012,11 @@
         const storedCache = localStorage.getItem('hannah_memoryCache');
         memoryCache = storedCache !== 'false'; // default true
         document.getElementById('memoryCacheToggle').checked = memoryCache;
+
+        const storedThinkingPanel = localStorage.getItem('hannah_thinkingPanel');
+        showThinkingPanel = storedThinkingPanel === 'true';
+        const thinkingToggle = document.getElementById('thinkingPanelToggle');
+        if (thinkingToggle) thinkingToggle.checked = showThinkingPanel;
         
         const storedCreative = localStorage.getItem('hannah_creative');
         creativeMode = storedCreative === 'true';
@@ -4886,6 +5090,7 @@
         localStorage.setItem('hannah_deepThink', deepThink);
         localStorage.setItem('hannah_internet', internetMode);
         localStorage.setItem('hannah_memoryCache', memoryCache);
+        localStorage.setItem('hannah_thinkingPanel', showThinkingPanel);
         localStorage.setItem('hannah_creative', creativeMode);
         localStorage.setItem('hannah_voice', voicePlayback);
         localStorage.setItem('hannah_theme', currentTheme);
@@ -4964,18 +5169,19 @@
         });
     };
 
-    function getCacheKey(text, model) {
-        return `${model}:${text.slice(0, 100)}`;
+    function getCacheKey(chatId, text, model) {
+        // Keep cache scoped to each conversation so answers don't leak across chats.
+        return `${chatId || 'global'}:${model}:${text.slice(0, 100)}`;
     }
 
-    function getFromCache(text, model) {
+    function getFromCache(chatId, text, model) {
         if (!memoryCache) return null;
-        return responseCache[getCacheKey(text, model)];
+        return responseCache[getCacheKey(chatId, text, model)];
     }
 
-    function saveToCache(text, model, response) {
+    function saveToCache(chatId, text, model, response) {
         if (!memoryCache) return;
-        responseCache[getCacheKey(text, model)] = response;
+        responseCache[getCacheKey(chatId, text, model)] = response;
     };
 
     // ================================
